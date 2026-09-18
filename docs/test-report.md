@@ -6,6 +6,17 @@ Later owner-authorized preview acceptance: customer play is enabled. Connection-
 
 ## Current checks
 
+### Mobile redesign — 19 September
+
+Published preview: https://7450440e.sarbath-club-preview.pages.dev/ (stable sarbath-club-preview.pages.dev). Customer play remains enabled for owner testing.
+
+- Minimal customer, counter and privacy screens; compact single-column layout. Removed external font loading; system fonts, safe-area support, 16 px inputs and 52 px primary controls.
+- Build and parser/module check pass. Client output: 238.74 kB JS, 6.52 kB CSS (previous 240.76/8.16 kB).
+- All six browser tests pass in 30.5 seconds, including live local verified claim/recovery and layout checks at 320/360/390/430/768 px. Start remains visible in a 640 px viewport; narrow claim inputs do not overflow or trigger small-font iOS zoom. Native device behavior still needs physical acceptance.
+- Reviewed 320 px welcome/claim and dark staff screenshots. Verification uses compact mode below its 300 px minimum normal width instead of clipping the widget.
+- Current software timing comparisons: +2/+20/+27/+19/+34 ms. These do not establish physical precision.
+- Core timing/claim schema and limits are unchanged; no new cleanup Worker deployment required for this UI update.
+
 - Production build passes (240.56 kB JS, 8.16 kB CSS). Parser/module check passes; this is not strict JS type checking.
 - All 11 Node tests pass (47.8 seconds, final run including migration 0006). Coverage includes exact thresholds, anonymous starts, idempotent finalization/claims, simultaneous normalized-phone claims, redeemed-but-unexpired blocking, exact-expiry eligibility, collision retries, injected lock-write rollback, populated legacy migration, customer/lock/session retention, staff authentication and origin checks.
 - Lifecycle redemption deliberately uses coupon IDs differing from play IDs.

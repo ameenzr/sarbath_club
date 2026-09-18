@@ -7,14 +7,14 @@ test('local Worker + D1 anonymous play flow with official Turnstile test verific
   await page.route('https://challenges.cloudflare.com/**',r=>r.fulfill({contentType:'application/javascript',body:'window.turnstile={render:(el,opts)=>{opts.callback("XXXX.DUMMY.TOKEN.XXXX");return 1},remove:()=>{}}'}));
   await page.goto('/');
   // Anonymous play — no form fields before play
-  await page.getByRole('button',{name:/LET.S PLAY/}).click();
+  await page.getByRole('button',{name:/let.s play/i}).click();
   await expect(page.getByRole('button',{name:/GET READY/})).toBeVisible({timeout:20000});
   // Early tap — should show result with replay option
   await page.getByRole('button',{name:/GET READY/}).click();
   await expect(page.getByText('tapped before',{exact:false})).toBeVisible();
   // Play again — immediate replay
-  await page.getByRole('button',{name:/PLAY AGAIN/}).click();
-  await page.getByRole('button',{name:/LET.S PLAY/}).click();
+  await page.getByRole('button',{name:/play again/i}).click();
+  await page.getByRole('button',{name:/let.s play/i}).click();
   await expect(page.getByRole('button',{name:/GET READY/})).toBeVisible({timeout:20000});
   await page.evaluate(()=>{
     const observer=new MutationObserver(()=>{
@@ -28,12 +28,12 @@ test('local Worker + D1 anonymous play flow with official Turnstile test verific
   // Synthetic unique phone avoids reusing the previous run's seven-day lock.
   const phone='9'+String(Date.now()).slice(-9);
   await page.getByLabel('Mobile number').fill(phone);
-  await page.getByRole('button',{name:/CLAIM REWARD/}).click();
+  await page.getByRole('button',{name:/claim reward/i}).click();
   await expect(page.locator('.coupon strong')).toHaveText(/^JB-[A-Z2-9]{5}$/,{timeout:20000});
   const code=await page.locator('.coupon strong').innerText();
   await page.reload();
   await expect(page.locator('.coupon strong')).toHaveText(code);
-  await page.getByRole('button',{name:/PLAY AGAIN/}).click();
+  await page.getByRole('button',{name:/play again/i}).click();
   await expect(page.getByText(`Previously claimed code: ${code}`)).toBeVisible();
 });
 
@@ -50,7 +50,7 @@ test('initial local timing comparison at a scripted 300 ms interval',async({page
         setTimeout(()=>{window.testLocalInterval=performance.now()-start;target.click();},300);
       });observer.observe(document.getElementById('root'),{childList:true,subtree:true,attributes:true,characterData:true});
     });
-    await page.getByRole('button',{name:/LET.S PLAY/}).click();
+    await page.getByRole('button',{name:/let.s play/i}).click();
     await expect(page.locator('.time-value')).toBeVisible({timeout:20000});
     const estimated=Number((await page.locator('.time-value').innerText()).split('ms')[0].trim());
     const local=await page.evaluate(()=>window.testLocalInterval);

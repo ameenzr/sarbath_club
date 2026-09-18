@@ -2,6 +2,8 @@
 
 ## Latest override — preview testing enabled
 
+Mobile redesign: src/App.jsx and src/style.css now use a compact single-column layout, system fonts (no Google Fonts request), short headings, 16 px form inputs, 52 px primary buttons, safe-area padding and a viewport-filling tap screen. Header/footer, staff and privacy are simplified. Turnstile uses compact mode when its container is below 300 px and flexible mode otherwise, matching official dimensions. Six browser tests pass, including 320/360/390/430/768 px widths, visible Start without scrolling, narrow claim/verification, live local claim and recovery. CSS production size decreased from 8.16 to 6.52 kB; JS from 240.76 to 238.74 kB. New deployment URL is recorded in the test report after publish.
+
 Connection-check follow-up: src/api.js now retries up to nine samples to obtain three consecutive stable samples within unchanged server limits (median <=1000 ms, spread <=150 ms). Two focused client tests cover spike recovery and bounded persistent-instability rejection. Preview service samples showed intermittent large spikes; error copy no longer assumes the customer's network is responsible.
 
 19 September 2026: owner explicitly authorized enabling the preview after asking why Let's Play was disabled. wrangler.preview.toml now has GAME_ENABLED=true; the deploy helper accepts either boolean for this named preview. This supersedes disabled-preview statements below. Production remains unlaunched; physical timing, real verification and staff acceptance remain pending. Keep preview available for owner testing until instructed otherwise.

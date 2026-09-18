@@ -53,6 +53,8 @@ An hourly cleanup Worker runs separately from Pages. Schema updates precede both
 
 Use Sarbath Club branding, clear labels, visible focus, large touch targets and no scrolling during the wait/tap screen. Explain the flash through text and color. Avoid strobing, respect reduced motion, and support readable mobile/desktop light/dark layouts. Present timing as estimated.
 
+Owner-requested mobile design: minimal single-column screens, short headings and instructions, system fonts without external font requests, 16 px inputs, primary controls at least 48 px high, safe-area support and no horizontal overflow down to 320 px. The welcome action should be visible without scrolling on common phone heights. Allow natural scrolling for claim forms and privacy content; never clip verification.
+
 Required states: welcome, connection checking, waiting, flash, submitting, unclaimed win, claiming, coupon result, failure with replay, active-coupon rejection, interruption and recovery. Explain both kinds of too-early result. Active-coupon text must say claim eligibility resumes at expiry.
 
 ## Acceptance criteria

@@ -1,9 +1,9 @@
 import { test, expect } from '@playwright/test';
 test('customer preview, mobile layout, privacy and staff login', async ({page})=>{
   await page.goto('/');
-  await expect(page.getByRole('heading',{name:/THINK/})).toBeVisible();
+  await expect(page.getByRole('heading',{name:/Quick sip challenge/})).toBeVisible();
   // New flow: no name/phone fields on welcome screen
-  await expect(page.getByRole('button',{name:/LET.S PLAY/})).toBeVisible();
+  await expect(page.getByRole('button',{name:/let.s play/i})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.screenshot({path:'test-results/customer-light.png',fullPage:true});
   await page.emulateMedia({colorScheme:'dark',reducedMotion:'reduce'});
@@ -26,22 +26,55 @@ test('fixture API drives anonymous play, early tap, replay and winning claim',as
   await page.route('https://challenges.cloudflare.com/**',r=>r.fulfill({contentType:'application/javascript',body:'window.turnstile={render:(el,opts)=>{opts.callback("test");return 1},remove:()=>{}}'}));
   // Anonymous start — no name/phone form before play
   await page.goto('/');
-  await page.getByRole('button',{name:/LET.S PLAY/}).click();
+  await page.getByRole('button',{name:/let.s play/i}).click();
   // Early tap
   await page.getByRole('button',{name:/GET READY/}).click();
   await expect(page.getByText('tapped before',{exact:false})).toBeVisible();
   // Replay
-  await page.getByRole('button',{name:/PLAY AGAIN/}).click();
+  await page.getByRole('button',{name:/play again/i}).click();
   status='reserved';
-  await page.getByRole('button',{name:/LET.S PLAY/}).click();
+  await page.getByRole('button',{name:/let.s play/i}).click();
   // Win — tap via keyboard
   await page.getByRole('button',{name:/TAP NOW/}).focus();await page.keyboard.press('Space');
   // Should show claim form after winning
   await expect(page.getByText('Claim your',{exact:false})).toBeVisible();
   await page.getByLabel('Your name').fill('Synthetic');
   await page.getByLabel('Mobile number').fill('9876543210');
-  await page.getByRole('button',{name:/CLAIM REWARD/}).click();
+  await page.getByRole('button',{name:/claim reward/i}).click();
   // Should show coupon code
   await expect(page.getByText('JB-ABCDE')).toBeVisible();
   await page.screenshot({path:'test-results/win.png',fullPage:true});
+});
+
+test('minimal interface fits small phones, keeps start visible and verification accessible',async({page})=>{
+  await page.route('**/api/config',r=>r.fulfill({json:{enabled:true,retentionDays:30,prize:{label:'One free sarbath',terms:'Synthetic'}}}));
+  for(const width of [320,360,390,430,768]) {
+    await page.setViewportSize({width,height:640});
+    await page.goto('/');
+    const start=page.getByRole('button',{name:/let.s play/i});
+    const box=await start.boundingBox();
+    expect(box.height).toBeGreaterThanOrEqual(48);
+    expect(box.y+box.height).toBeLessThanOrEqual(640);
+    expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+    await expect(page.getByLabel('Your name')).toHaveCount(0);
+    await expect(page.locator('#turnstile-script')).toHaveCount(0);
+  }
+  await page.setViewportSize({width:320,height:568});
+  await page.goto('/');
+  await page.screenshot({path:'test-results/minimal-mobile-320.png',fullPage:true});
+  await page.route('**/api/result',r=>r.fulfill({json:{status:'won',reactionMs:300,code:null,prize:{label:'One free sarbath',terms:'Synthetic'}}}));
+  await page.route('https://challenges.cloudflare.com/**',r=>r.fulfill({contentType:'application/javascript',body:'window.turnstile={render:(el,opts)=>{el.dataset.size=opts.size;const box=document.createElement("div");box.style.width=opts.size==="compact"?"150px":"300px";box.style.height=opts.size==="compact"?"140px":"65px";el.append(box);opts.callback("test");return 1},remove:()=>{}}'}));
+  await page.evaluate(()=>sessionStorage.setItem('sarbath-play',JSON.stringify({credential:crypto.randomUUID()})));
+  await page.reload();
+  await expect(page.getByLabel('Your name')).toBeVisible();
+  await expect(page.locator('.verification')).toHaveAttribute('data-size','compact');
+  expect(await page.getByLabel('Mobile number').evaluate(el=>getComputedStyle(el).fontSize)).toBe('16px');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.screenshot({path:'test-results/minimal-claim-320.png',fullPage:true});
+  await page.goto('/privacy');
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
+  await page.goto('/staff');
+  const submit=page.getByRole('button',{name:/sign in/i});
+  expect((await submit.boundingBox()).height).toBeGreaterThanOrEqual(48);
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
