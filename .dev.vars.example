@@ -1,0 +1,4 @@
+# Local-only official Turnstile test secret. Never use for remote deployments.
+TURNSTILE_SECRET=1x0000000000000000000000000000000AA
+# Choose your own local staff password through .dev.vars; never commit it.
+STAFF_PASSWORD=

@@ -1,0 +1,13 @@
+name = "sarbath-club-preview"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-08-06"
+
+[vars]
+APP_ENV = "preview"
+GAME_ENABLED = "false"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sarbath-club-preview-db"
+database_id = "cc5eaccb-b5eb-42c6-973b-a16b2cf5fdce"
+migrations_dir = "migrations"

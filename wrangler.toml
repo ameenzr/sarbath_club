@@ -1,0 +1,14 @@
+name = "sarbath-club"
+pages_build_output_dir = "dist"
+compatibility_date = "2026-08-06"
+
+[vars]
+APP_ENV = "local"
+GAME_ENABLED = "false"
+
+[[d1_databases]]
+binding = "DB"
+database_name = "sarbath-club-local"
+# Local identifier only. Replace with the preview database ID before any deploy.
+database_id = "00000000-0000-0000-0000-000000000001"
+migrations_dir = "migrations"

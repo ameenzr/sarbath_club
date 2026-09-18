@@ -1,0 +1,53 @@
+# Sarbath Club — Quick Sip Challenge
+
+A mobile-first reaction game with one play per phone per shop day and counter redemption. React/Vite serves the UI; Cloudflare Pages Functions and D1 reserve attempts, decide outcomes, and redeem coupons. Local preview works with a demo reward. Real rewards are disabled until the launch decisions and timing checks in TASKS.md pass.
+
+## Run locally
+
+Use Node 22.12+ or the installed Node 24 runtime. From this directory:
+
+```powershell
+npm install
+npm run db:local
+npm run preview
+```
+
+Open [the local preview](http://127.0.0.1:8788). Keep that terminal running. The API and frontend share this address. Local-only `.dev.vars` contains official public Turnstile test configuration and a demo staff password; replace the demo password for your own local testing. The ignored files must never become remote secret configuration. If starting from a fresh copy, copy `.dev.vars.example` to `.dev.vars` and `.env.example` to `.env.local`, then set your local staff password.
+
+For frontend hot reload, run `npm run dev:api` in one terminal and `npm run dev` in another. Open `http://127.0.0.1:5173`. Run a build first so `dist` exists. The Vite server proxies API requests to 8788. `?diagnostic` on the Vite URL displays local timing comparisons for development only.
+
+## Staff: redeem a coupon
+
+1. Open `/staff` on the shop's application address and sign in.
+2. Enter the coupon code or customer's mobile number.
+3. Check the customer's details, prize terms, expiry, and redemption status.
+4. Tap **Mark Redeemed** at the moment of handover.
+5. **Wait for redemption confirmation before handing over the prize.**
+
+If the connection fails, search the code again to check its current status. Do not give another prize for a coupon already redeemed. Expired coupons cannot be redeemed. Sign out when finished with the device.
+
+## Verification
+
+```powershell
+npm run check
+npm test
+```
+
+With the local preview running:
+
+```powershell
+npx playwright install chromium
+npm run test:e2e
+```
+
+Tests use synthetic records. Browser tests include fixtures and the real local Worker/D1 flow using official Turnstile testing keys. They do not replace real-phone, shop-network, or production verification. See `docs/test-report.md` and `docs/timing-validation.md`.
+
+## Owner operations
+
+Cloudflare login is needed before remote setup. Use `npx wrangler login` and complete sign-in/MFA yourself; never send credentials to the agent. The agent should verify the selected account and prepare an isolated preview before production.
+
+See [the operations runbook](docs/operations.md) for secret rotation, exports, retention, troubleshooting, and deployment. The next agent task and pending human checkpoints are recorded in [TASKS.md](TASKS.md) and [decisions](docs/decisions.md).
+
+If the game stops working, check connectivity, then the Cloudflare Workers & Pages deployment status and D1 usage/errors. Keep staff from handing over unconfirmed prizes. Do not delete the database or repeatedly redeploy without checking the cause.
+
+The app uses estimated reaction times. A modified client can automate play; self-reported phone numbers cannot prove identity. Real-prize launch requires measured timing acceptance and an owner decision on reward abuse tolerance.

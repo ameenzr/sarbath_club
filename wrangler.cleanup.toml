@@ -1,0 +1,9 @@
+name = "sarbath-club-cleanup"
+main = "worker/cleanup.js"
+compatibility_date = "2026-08-06"
+[triggers]
+crons = ["0 * * * *"]
+[[d1_databases]]
+binding = "DB"
+database_name = "sarbath-club-local"
+database_id = "00000000-0000-0000-0000-000000000001"

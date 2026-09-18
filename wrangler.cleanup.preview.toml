@@ -1,0 +1,11 @@
+name = "sarbath-club-preview-cleanup"
+account_id = "2bbb5d7a6d1b537e5e61c8138c5275a6"
+main = "worker/cleanup.js"
+compatibility_date = "2026-08-06"
+workers_dev = false
+[triggers]
+crons = ["0 * * * *"]
+[[d1_databases]]
+binding = "DB"
+database_name = "sarbath-club-preview-db"
+database_id = "cc5eaccb-b5eb-42c6-973b-a16b2cf5fdce"
