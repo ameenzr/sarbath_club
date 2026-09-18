@@ -1,6 +1,6 @@
 # Sarbath Club — Quick Sip Challenge
 
-A mobile-first reaction game with one play per phone per shop day and counter redemption. React/Vite serves the UI; Cloudflare Pages Functions and D1 reserve attempts, decide outcomes, and redeem coupons. Local preview works with a demo reward. Real rewards are disabled until the launch decisions and timing checks in TASKS.md pass.
+A mobile-first reaction game with unlimited anonymous plays and counter redemption. Win first, then enter name/mobile and complete verification to claim one free sarbath. Each phone can claim one coupon per seven-day validity period, including after redemption. React/Vite serves the UI; Cloudflare Pages Functions and D1 manage plays, claims and redemption. Remote customer play stays disabled pending physical acceptance and launch checks in TASKS.md.
 
 ## Run locally
 

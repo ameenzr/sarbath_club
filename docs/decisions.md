@@ -1,10 +1,12 @@
 # Implementation decisions
 
-Updated 18 September 2026. Existing PRD, TASKS, and brand PDF preserved. No repository instructions or application code were present in the project root.
+Updated 19 September 2026. Current rules follow PRD v1.1; dated evidence below records the project history.
 
 ## Customer flow change — play then claim
 
 Owner-requested change: customers play first without entering name/mobile or completing verification. Only after winning (120–449 ms reaction), the customer enters identity and completes Turnstile verification to claim a coupon via `/api/claim`. Unlimited plays with immediate replay on loss. Each phone may hold one active coupon at a time (7-day validity from claim issuance). Migration 0005 adds `plays`, `play_sessions`, `coupons`, and `coupon_locks` tables; legacy `attempts`/`sessions` remain for compatibility. Backend `reserve` is now anonymous (no name/phone), and `claim` is a separate step.
+
+Redemption does not release the phone lock before expiry. Migration 0006 corrects future prize terms to seven days from coupon issuance; existing issued snapshots remain unchanged. Migrations 0001–0006 are now applied locally and to preview. All 11 Node and 5 browser tests pass, including a live local verified claim. Preview Pages and the separate hourly cleanup worker are updated with play disabled. Latest evidence is in docs/test-report.md; human steps are prepared in docs/acceptance.md.
 
 ## Architecture
 
@@ -58,7 +60,7 @@ Miniflare's stable test runtime uses compatibility date 2026-08-06. Patched undi
 
 ## Confirmed prize
 
-Owner instruction: winning customer receives one free sarbath; coupon valid for a week. Configured expiry is exactly 604800000 milliseconds (7 × 24 hours) after the server finalizes the winning attempt. Staff must redeem before that timestamp. Changes apply to new attempts only; existing attempt prize/validity snapshots remain unchanged. No purchase conditions, serving restrictions or special redemption hours have been invented.
+Owner instruction: winning customer receives one free sarbath; coupon valid for a week. Configured expiry is exactly 604800000 milliseconds (7 × 24 hours) after successful coupon claim issuance. Staff must redeem before that timestamp. Changes apply to future play/claim snapshots; existing issued coupons remain unchanged. No purchase conditions, serving restrictions or special redemption hours have been invented.
 
 ## Confirmed retention
 
