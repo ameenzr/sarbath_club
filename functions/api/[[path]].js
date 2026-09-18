@@ -1,4 +1,4 @@
-import { ApiError, digest, phoneNumber, customerName, primary, loadSession, reserve, finalize, result, redeem, incrementLimit, cleanup } from '../../server/core.js';
+import { ApiError, digest, phoneNumber, customerName, primary, loadSession, reserve, finalize, claim, result, redeem, incrementLimit, cleanup } from '../../server/core.js';
 
 const TEST_SECRET = '1x0000000000000000000000000000000AA';
 const json = (body, status = 200, headers = {}) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', ...headers } });
@@ -74,15 +74,23 @@ export async function onRequest({ request, env }) {
       const existing = await loadSession(db, token);
       if (existing) return json(result(existing.status === 'reserved' && received > existing.expires_at_ms ? await finalize(db, token, received) : existing));
       await incrementLimit(db, `start:${ipKey}`, 60);
-      const name = customerName(input.name), phone = phoneNumber(input.phone);
-      await incrementLimit(db, `phone:${await digest(phone)}`, 5);
       const cfg = await db.prepare('SELECT * FROM config WHERE id=1').first();
       if (!local(request) && (env.GAME_ENABLED !== 'true' || !cfg.approved)) throw new ApiError('game_unavailable', 503);
       const samples = (await db.prepare('SELECT duration_ms FROM measurements WHERE owner=? AND duration_ms IS NOT NULL AND issued_ms>? ORDER BY issued_ms DESC LIMIT 3').bind(cookies(request).sampling || '', received - 120000).all()).results.map(x => x.duration_ms).sort((a,b) => a-b);
       if (samples.length !== 3) throw new ApiError('connection_check_required');
       if (samples[1] > 1000 || samples[2] - samples[0] > 150) throw new ApiError('high_latency');
+      return json(result(await reserve(db, token, cfg, samples[1], Date.now())));
+    }
+    if (path === 'claim') {
+      const token = await bearer(request);
+      await incrementLimit(db, `claim:${ipKey}`, 30);
+      const row = await loadSession(db, token);
+      if (!row) throw new ApiError('invalid_session', 404);
+      if (row.status !== 'won') throw new ApiError('win_required', 409);
+      if (row.code) return json(result(row));
+      const name = customerName(input.name), phone = phoneNumber(input.phone);
       await verify(request, env, input.turnstileToken);
-      return json(result(await reserve(db, token, name, phone, cfg, samples[1], Date.now())));
+      return json(result(await claim(db, token, name, phone, Date.now())));
     }
     if (path === 'tap' || path === 'result') {
       const token = await bearer(request);
@@ -111,7 +119,7 @@ export async function onRequest({ request, env }) {
         if (typeof input.query !== 'string' || input.query.length > 40) throw new ApiError('invalid_input');
         const q = input.query.trim().toUpperCase();
         const code = /^JB-[ABCDEFGHJKLMNPQRSTUVWXYZ23456789]{5}$/.test(q);
-        const rows = await db.prepare(`SELECT id,name,phone,prize_label,prize_terms,reaction_ms,created_at,code,expires_at,redeemed,redeemed_at FROM attempts WHERE status='won' AND ${code ? 'code' : 'phone'}=? ORDER BY created_at DESC LIMIT 10`).bind(code ? q : phoneNumber(q)).all();
+        const rows = await db.prepare(`SELECT c.*,p.reaction_ms FROM coupons c JOIN plays p ON p.id=c.play_id WHERE c.${code ? 'code' : 'phone'}=? ORDER BY c.created_at DESC LIMIT 10`).bind(code ? q : phoneNumber(q)).all();
         return json({ results: rows.results });
       }
       if (path === 'staff/redeem') {

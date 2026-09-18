@@ -195,6 +195,7 @@ Update after each task. Use `done`, `in progress`, `blocked`, or `pending`; a pa
 | 2026-09-18 | T-16–T-19 | done | Staff sessions/search/redemption; API access/replay tests; branded UI and inspected mobile/desktop themes | H-06 staff/device walkthrough pending |
 | 2026-09-18 | T-20 | done | H-01/H-02 resolved: free sarbath, seven-day validity, 30-day automatic retention and no customer deletion feature; config/privacy updated; cleanup tests pass | Launch acceptance remains separate |
 | 2026-09-18 | T-21–T-22 | done | docs/test-report.md, README.md, docs/operations.md; build/check; four DB/API test groups; five browser tests; audit 0 findings | Remote recovery rehearsal remains launch prerequisite |
+| 2026-09-18 | Play-then-claim | done | Anonymous play first; identity & Turnstile at claim; 8/8 unit tests pass; 5/5 Playwright e2e pass; local migration 0005 applied | Ready for remote preview deployment when authorized |
 | 2026-09-18 | T-23 | in progress | H-03/H-04 resolved; isolated preview Pages/D1 created; migrations applied; real public site key deployed and encrypted secret entries confirmed | Complete remote verification/staff acceptance after owner policy; customer play remains disabled |
 | 2026-09-18 | T-24–T-27 | pending | Timing test procedure, scheduler code, QR generator and release/runbook prepared | Access, real configuration, policies, physical checks and release authorization |
 

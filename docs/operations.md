@@ -73,7 +73,7 @@ CSV export consumers must use `csvCell` escaping from `server/core.js`; SQL back
 
 ## Usage and costs
 
-Planning volume is 200 plays/day. Each new page/config load adds a request; three samples use six requests, followed by Start and Tap. About 9 API requests per new play means roughly 1800/day before staff operations/recovery. Database writes include sample issue/ack, rate counters, reservation/finalization and indexes/cleanup; measure rows with D1 metadata/dashboard instead of equating one API call to one row.
+Planning volume is 200 plays/day. Each new page/config load adds a request; three samples use six requests, followed by Start and Tap. Winning plays add a Claim request with Turnstile verification. About 9–10 API requests per play means roughly 1800–2000/day before staff operations/recovery. With unlimited replays, actual volume may exceed 200 plays/day. Database writes include sample issue/ack, rate counters, reservation/finalization, coupon/lock inserts and indexes/cleanup; measure rows with D1 metadata/dashboard instead of equating one API call to one row.
 
 [Workers Free limits](https://developers.cloudflare.com/workers/platform/limits/) currently include 100,000 requests/day. [D1 Free allowances](https://developers.cloudflare.com/d1/platform/pricing/) include 5 million reads/day, 100,000 writes/day and 5 GB total storage. Limits are account-wide; other applications count too. Check dashboard metrics and CPU usage after preview. Warn on meaningful trends toward limits; do not promise indefinite zero cost or enable a paid plan without authorization.
 

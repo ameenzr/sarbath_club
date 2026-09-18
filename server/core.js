@@ -48,50 +48,67 @@ export function result(row) {
     waitingDelayMs: row.waiting_delay_ms, expiresAtMs: row.expires_at_ms };
 }
 export async function loadSession(db, token) {
-  return db.prepare('SELECT a.*,s.waiting_delay_ms,s.flash_issued_ms,s.latency_baseline_ms,s.expires_at_ms,s.used FROM attempts a JOIN sessions s ON s.attempt_id=a.id WHERE s.token=?').bind(token).first();
+  return db.prepare('SELECT a.*,c.code,c.expires_at,s.waiting_delay_ms,s.flash_issued_ms,s.latency_baseline_ms,s.expires_at_ms,s.used FROM plays a JOIN play_sessions s ON s.play_id=a.id LEFT JOIN coupons c ON c.play_id=a.id WHERE s.token=?').bind(token).first();
 }
-export async function reserve(db, token, name, phone, config, baseline, now = Date.now()) {
+export async function reserve(db, token, config, baseline, now = Date.now()) {
   const delay = randomInt(1500, 4500), expiry = now + delay + baseline + 10000;
   try {
     await db.batch([
-      db.prepare(`INSERT INTO attempts(request_key,created_at,play_date,name,phone,win_threshold_ms,minimum_reaction_ms,prize_label,prize_terms,config_version,coupon_validity_ms)
-        VALUES(?,?,?,?,?,?,?,?,?,?,?)`).bind(token, now, playDate(now), name, phone, config.win_threshold_ms, config.minimum_reaction_ms, config.prize_label, config.prize_terms, config.version, config.coupon_validity_ms),
-      db.prepare('INSERT INTO sessions(token,attempt_id,flash_issued_ms,latency_baseline_ms,waiting_delay_ms,expires_at_ms,created_at) SELECT ?,id,?,?,?,?,? FROM attempts WHERE request_key=?')
+      db.prepare(`INSERT INTO plays(request_key,created_at,win_threshold_ms,minimum_reaction_ms,prize_label,prize_terms,config_version,coupon_validity_ms)
+        VALUES(?,?,?,?,?,?,?,?)`).bind(token, now, config.win_threshold_ms, config.minimum_reaction_ms, config.prize_label, config.prize_terms, config.version, config.coupon_validity_ms),
+      db.prepare('INSERT INTO play_sessions(token,play_id,flash_issued_ms,latency_baseline_ms,waiting_delay_ms,expires_at_ms,created_at) SELECT ?,id,?,?,?,?,? FROM plays WHERE request_key=?')
         .bind(token, now, baseline, delay, expiry, now, token)
     ]);
   } catch (error) {
     const existing = await loadSession(db, token);
     if (existing) return existing;
-    if (await db.prepare('SELECT id FROM attempts WHERE phone=? AND play_date=?').bind(phone, playDate(now)).first()) throw new ApiError('already_played', 409);
     throw error;
   }
   return loadSession(db, token);
 }
-export async function finalize(db, token, now = Date.now(), early = false, makeCode = couponCode) {
+export async function finalize(db, token, now = Date.now(), early = false) {
   const row = await loadSession(db, token);
   if (!row) throw new ApiError('invalid_session', 404);
   if (row.status !== 'reserved') return row;
   const reaction = Math.round(now - row.flash_issued_ms - row.latency_baseline_ms - row.waiting_delay_ms);
   const status = now > row.expires_at_ms ? 'expired' : outcome(reaction, row.minimum_reaction_ms, row.win_threshold_ms, early);
+  await db.batch([
+    db.prepare("UPDATE plays SET status=?,completed_at=?,reaction_ms=? WHERE id=? AND status='reserved'").bind(status, now, status === 'expired' ? null : reaction, row.id),
+    db.prepare("UPDATE play_sessions SET used=1 WHERE token=? AND EXISTS(SELECT 1 FROM plays WHERE id=play_sessions.play_id AND status!='reserved')").bind(token)
+  ]);
+  return loadSession(db, token);
+}
+export async function claim(db, token, name, phone, now = Date.now(), makeCode = couponCode) {
+  const row = await loadSession(db, token);
+  if (!row) throw new ApiError('invalid_session', 404);
+  if (row.status !== 'won') throw new ApiError('win_required', 409);
+  if (row.code) return row;
   for (let i = 0; i < 5; i++) {
-    const code = status === 'won' ? makeCode() : null;
     try {
       await db.batch([
-        db.prepare(`UPDATE attempts SET status=?,completed_at=?,reaction_ms=?,code=?,expires_at=? WHERE id=? AND status='reserved'`)
-          .bind(status, now, status === 'expired' ? null : reaction, code, status === 'won' ? now + row.coupon_validity_ms : null, row.id),
-        db.prepare(`UPDATE sessions SET used=1 WHERE token=? AND EXISTS(SELECT 1 FROM attempts WHERE id=sessions.attempt_id AND status!='reserved')`).bind(token)
+        db.prepare(`INSERT INTO coupons(play_id,name,phone,code,created_at,expires_at,prize_label,prize_terms)
+          SELECT id,?,?,?,?,?,?,? FROM plays WHERE id=? AND status='won'
+          AND NOT EXISTS(SELECT 1 FROM coupons WHERE play_id=?)
+          AND NOT EXISTS(SELECT 1 FROM coupon_locks WHERE phone=? AND expires_at>?)`)
+          .bind(name, phone, makeCode(), now, now + row.coupon_validity_ms, row.prize_label, row.prize_terms, row.id, row.id, phone, now),
+        db.prepare(`INSERT INTO coupon_locks(phone,coupon_id,expires_at)
+          SELECT phone,id,expires_at FROM coupons WHERE play_id=?
+          ON CONFLICT(phone) DO UPDATE SET coupon_id=excluded.coupon_id,expires_at=excluded.expires_at
+          WHERE coupon_locks.expires_at<=? OR coupon_locks.coupon_id=excluded.coupon_id`).bind(row.id, now)
       ]);
-      return loadSession(db, token);
-    } catch (e) {
-      if (!String(e).includes('attempts.code')) throw e;
+      const claimed = await loadSession(db, token);
+      if (claimed.code) return claimed;
+      throw new ApiError('active_coupon', 409);
+    } catch (error) {
+      if (!String(error).includes('coupons.code')) throw error;
     }
   }
   throw new ApiError('temporarily_unavailable', 503);
 }
 export async function redeem(db, id, now = Date.now()) {
-  const update = await db.prepare("UPDATE attempts SET redeemed=1,redeemed_at=? WHERE id=? AND status='won' AND redeemed=0 AND expires_at>?").bind(now, id, now).run();
-  const row = await db.prepare('SELECT status,redeemed,redeemed_at,expires_at FROM attempts WHERE id=?').bind(id).first();
-  if (!row || row.status !== 'won') throw new ApiError('invalid_coupon', 404);
+  const update = await db.prepare("UPDATE coupons SET redeemed=1,redeemed_at=? WHERE id=? AND redeemed=0 AND expires_at>?").bind(now, id, now).run();
+  const row = await db.prepare('SELECT redeemed,redeemed_at,expires_at FROM coupons WHERE id=?').bind(id).first();
+  if (!row) throw new ApiError('invalid_coupon', 404);
   if (!row.redeemed) throw new ApiError('coupon_expired', 409);
   return { ok: true, alreadyRedeemed: update.meta.changes === 0, redeemedAt: row.redeemed_at };
 }
@@ -104,6 +121,10 @@ export async function incrementLimit(db, key, limit, now = Date.now()) {
 export async function cleanup(db, now = Date.now()) {
   const config = await db.prepare('SELECT retention_days FROM config WHERE id=1').first();
   await db.batch([
+    db.prepare("UPDATE plays SET status='expired',completed_at=? WHERE status='reserved' AND id IN(SELECT play_id FROM play_sessions WHERE expires_at_ms<?)").bind(now, now),
+    db.prepare("UPDATE play_sessions SET used=1 WHERE used=0 AND play_id IN(SELECT id FROM plays WHERE status!='reserved')"),
+    db.prepare('DELETE FROM coupons WHERE created_at<? AND expires_at<=?').bind(now - config.retention_days * 86400000, now),
+    db.prepare('DELETE FROM plays WHERE created_at<? AND NOT EXISTS(SELECT 1 FROM coupons WHERE coupons.play_id=plays.id)').bind(now - config.retention_days * 86400000),
     db.prepare("UPDATE attempts SET status='expired',completed_at=? WHERE status='reserved' AND id IN(SELECT attempt_id FROM sessions WHERE expires_at_ms<?)").bind(now, now),
     db.prepare("UPDATE sessions SET used=1 WHERE used=0 AND attempt_id IN(SELECT id FROM attempts WHERE status!='reserved')"),
     db.prepare('DELETE FROM rate_limits WHERE expires_at<?').bind(now),

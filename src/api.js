@@ -1,5 +1,6 @@
 export const messages = {
-  already_played: "You've already played today. Come back tomorrow!",
+  win_required: 'Only a winning play can claim a reward.',
+  active_coupon: 'You already have an active coupon. Use it before claiming another!',
   verification_failed: "We couldn't verify your request. Refresh and try again.",
   high_latency: 'Your connection seems slow or unstable. Try a stronger connection.',
   connection_check_required: 'Please check your connection and try again.',

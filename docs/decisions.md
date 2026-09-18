@@ -2,6 +2,10 @@
 
 Updated 18 September 2026. Existing PRD, TASKS, and brand PDF preserved. No repository instructions or application code were present in the project root.
 
+## Customer flow change — play then claim
+
+Owner-requested change: customers play first without entering name/mobile or completing verification. Only after winning (120–449 ms reaction), the customer enters identity and completes Turnstile verification to claim a coupon via `/api/claim`. Unlimited plays with immediate replay on loss. Each phone may hold one active coupon at a time (7-day validity from claim issuance). Migration 0005 adds `plays`, `play_sessions`, `coupons`, and `coupon_locks` tables; legacy `attempts`/`sessions` remain for compatibility. Backend `reserve` is now anonymous (no name/phone), and `claim` is a separate step.
+
 ## Architecture
 
 - React/Vite frontend with Pages Functions under `functions/api`. One origin for browser and API; local Vite proxies to Wrangler on port 8788.

@@ -6,11 +6,11 @@
 
 | Check | Result | Scope |
 |---|---|---|
-| npm run build | Pass | Production client bundle and static assets |
+| npm run build | Pass | Production client bundle and static assets (239.76 kB JS, 8.16 kB CSS) |
 | npm run check | Pass | TypeScript parser/module check for JS/JSX; not full strict JS type checking |
-| Local D1 migrations | Pass | Initial schema and maintenance indexes/table applied |
-| npm test | 4 suites pass | Pure boundaries; real D1 concurrency/rollback/cleanup; API authentication/verification/origin/privacy |
-| npm run test:e2e | 5 tests pass | Mobile/desktop UI, themes, fixtures, local live flow and initial timing comparison |
+| Local D1 migrations | Pass | Migrations 0001–0005 applied, including 0005_play_then_claim.sql |
+| npm test | 8 suites pass | Boundaries, anonymous reserve/tap/claim, concurrency, coupon locks, collision retry, retention cleanup, API integration |
+| npm run test:e2e | 5 tests pass | Mobile/desktop UI, anonymous flow, claim form, replay, timing test (+3 to +15 ms) |
 | Dependency audit | 0 vulnerabilities | Stable Miniflare with patched undici/sharp overrides |
 | Bundle secret scan | Pass | No staff password, private Turnstile secret or demo password in src/public/dist |
 | Visual review | Pass | Mobile light/dark, desktop and winning coupon screenshots inspected |

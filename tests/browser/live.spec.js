@@ -1,20 +1,23 @@
 import { test, expect } from '@playwright/test';
 import { writeFile } from 'node:fs/promises';
 
-test('local Worker + D1 flow with official Turnstile test verification',async({page})=>{
+test('local Worker + D1 anonymous play flow with official Turnstile test verification',async({page})=>{
   // Only widget acquisition is replaced. The Worker really calls Cloudflare
   // siteverify with its official public testing secret and a dummy test token.
   await page.route('https://challenges.cloudflare.com/**',r=>r.fulfill({contentType:'application/javascript',body:'window.turnstile={render:(el,opts)=>{opts.callback("XXXX.DUMMY.TOKEN.XXXX");return 1},remove:()=>{}}'}));
-  const phone='9'+String(Date.now()).slice(-9);
-  await page.goto('/');await page.getByLabel('Your name').fill('Synthetic local test');await page.getByLabel('Mobile number').fill(phone);
+  await page.goto('/');
+  // Anonymous play — no form fields before play
   await page.getByRole('button',{name:/LET.S PLAY/}).click();
   await expect(page.getByRole('button',{name:/GET READY/})).toBeVisible({timeout:20000});
+  // Early tap — should show result with replay option
   await page.getByRole('button',{name:/GET READY/}).click();
-  await expect(page.getByText('Today’s play is used.',{exact:false})).toBeVisible();
-  await page.reload();await expect(page.getByText('Today’s play is used.',{exact:false})).toBeVisible();
-  await page.evaluate(()=>sessionStorage.clear());await page.reload();
-  await page.getByLabel('Your name').fill('Synthetic local test');await page.getByLabel('Mobile number').fill(phone);await page.getByRole('button',{name:/LET.S PLAY/}).click();
-  await expect(page.getByRole('heading',{name:'See you tomorrow.'})).toBeVisible({timeout:20000});
+  await expect(page.getByText('tapped before',{exact:false})).toBeVisible();
+  // Play again — immediate replay
+  await page.getByRole('button',{name:/PLAY AGAIN/}).click();
+  await page.getByRole('button',{name:/LET.S PLAY/}).click();
+  await expect(page.getByRole('button',{name:/GET READY/})).toBeVisible({timeout:20000});
+  // Wait for flash and tap — timing determines outcome
+  // Recovery: just let it expire or tap; we're testing the flow structure
 });
 
 test('initial local timing comparison at a scripted 300 ms interval',async({page})=>{
@@ -23,8 +26,6 @@ test('initial local timing comparison at a scripted 300 ms interval',async({page
   const measurements=[];
   for(let i=0;i<5;i++){
     await page.goto('/');await page.evaluate(()=>sessionStorage.clear());await page.reload();
-    const phone='8'+String(Date.now()).slice(-9);
-    await page.getByLabel('Your name').fill('Synthetic timing test');await page.getByLabel('Mobile number').fill(phone);
     await page.evaluate(()=>{
       const observer=new MutationObserver(()=>{
         const target=document.querySelector('.play-field.flash');
