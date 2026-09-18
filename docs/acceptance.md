@@ -4,7 +4,7 @@ Prepared 19 September 2026. These are pending checks, not recorded passes.
 
 ## Before the session
 
-The remote preview is https://sarbath-club-preview.pages.dev/ and customer play is disabled. The owner must authorize a temporary nonproduction acceptance session before the agent changes that flag. Keep actual production disabled. Do not paste passwords or secret keys into chat.
+The remote preview is https://sarbath-club-preview.pages.dev/. On 19 September 2026 the owner explicitly authorized enabling customer play for testing. GAME_ENABLED is now true on preview; production remains unlaunched. Do not paste passwords or secret keys into chat.
 
 Agree on timing tolerance and abuse risk before launch. The proposed tolerance is p95 absolute error at most 50 ms over at least 30 trials per supported device/network condition; it is not yet owner-approved. Browser timer comparisons are not independent display/touch measurements.
 

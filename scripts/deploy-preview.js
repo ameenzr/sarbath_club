@@ -4,7 +4,7 @@ import { spawnSync } from 'node:child_process';
 // configuration for the command, then restore the local file even on failure.
 const local = await readFile('wrangler.toml', 'utf8');
 const preview = await readFile('wrangler.preview.toml', 'utf8');
-if (!preview.includes('name = "sarbath-club-preview"') || !preview.includes('GAME_ENABLED = "false"')) throw new Error('Unexpected preview target or enablement state.');
+if (!preview.includes('name = "sarbath-club-preview"') || !preview.includes('APP_ENV = "preview"') || !/GAME_ENABLED = "(true|false)"/.test(preview)) throw new Error('Unexpected preview target or enablement state.');
 let status=1;
 try {
   await writeFile('wrangler.toml', preview);

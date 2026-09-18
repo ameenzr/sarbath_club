@@ -4,7 +4,7 @@ compatibility_date = "2026-08-06"
 
 [vars]
 APP_ENV = "preview"
-GAME_ENABLED = "false"
+GAME_ENABLED = "true"
 
 [[d1_databases]]
 binding = "DB"

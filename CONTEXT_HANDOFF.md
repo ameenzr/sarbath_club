@@ -1,5 +1,9 @@
 # Sarbath Club — context handoff
 
+## Latest override — preview testing enabled
+
+19 September 2026: owner explicitly authorized enabling the preview after asking why Let's Play was disabled. wrangler.preview.toml now has GAME_ENABLED=true; the deploy helper accepts either boolean for this named preview. This supersedes disabled-preview statements below. Production remains unlaunched; physical timing, real verification and staff acceptance remain pending. Keep preview available for owner testing until instructed otherwise.
+
 Updated 19 September 2026. Project summary, not a chat export. No private secrets.
 
 ## Workspace and repository
