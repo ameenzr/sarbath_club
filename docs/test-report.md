@@ -2,6 +2,8 @@
 
 Updated 19 September 2026. Local synthetic data and disabled Cloudflare preview.
 
+Later owner-authorized preview acceptance: customer play is enabled. Connection-check follow-up deployed at https://a8489765.sarbath-club-preview.pages.dev/; two focused client tests, parser check and build passed. Live retry algorithm obtained consecutive samples 180/104/100 ms and anonymous Start returned 200 reserved. The API limits remain unchanged. Earlier disabled-preview smoke evidence below is historical.
+
 ## Current checks
 
 - Production build passes (240.56 kB JS, 8.16 kB CSS). Parser/module check passes; this is not strict JS type checking.

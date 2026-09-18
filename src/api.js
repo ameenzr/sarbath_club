@@ -2,7 +2,7 @@ export const messages = {
   win_required: 'Only a winning play can claim a reward.',
   active_coupon: 'Your phone already has a coupon within its validity period. Claim again after it expires.',
   verification_failed: "We couldn't verify your request. Refresh and try again.",
-  high_latency: 'Your connection seems slow or unstable. Try a stronger connection.',
+  high_latency: 'The timing check could not stabilize. Please try again. If it keeps happening, try another connection.',
   connection_check_required: 'Please check your connection and try again.',
   too_many_requests: 'Lots of requests right now. Try again in a moment.',
   invalid_input: 'Please check the details you entered.',
@@ -23,6 +23,14 @@ export async function api(path, data, credential) {
 }
 export async function sampleConnection() {
   const samples = [];
-  for (let i = 0; i < 3; i++) { const challenge = await api('ping', {}); samples.push((await api('ping', { challenge: challenge.challenge })).sample); }
-  return samples;
+  // Retry transient service/network spikes without widening server timing limits.
+  for (let i = 0; i < 9; i++) {
+    const challenge = await api('ping', {});
+    samples.push((await api('ping', { challenge: challenge.challenge })).sample);
+    if (samples.length >= 3) {
+      const recent = samples.slice(-3), sorted = [...recent].sort((a,b)=>a-b);
+      if (sorted[1] <= 1000 && sorted[2] - sorted[0] <= 150) return recent;
+    }
+  }
+  throw Object.assign(new Error(messages.high_latency), { key: 'high_latency' });
 }

@@ -2,6 +2,8 @@
 
 ## Latest override — preview testing enabled
 
+Connection-check follow-up: src/api.js now retries up to nine samples to obtain three consecutive stable samples within unchanged server limits (median <=1000 ms, spread <=150 ms). Two focused client tests cover spike recovery and bounded persistent-instability rejection. Preview service samples showed intermittent large spikes; error copy no longer assumes the customer's network is responsible.
+
 19 September 2026: owner explicitly authorized enabling the preview after asking why Let's Play was disabled. wrangler.preview.toml now has GAME_ENABLED=true; the deploy helper accepts either boolean for this named preview. This supersedes disabled-preview statements below. Production remains unlaunched; physical timing, real verification and staff acceptance remain pending. Keep preview available for owner testing until instructed otherwise.
 
 Updated 19 September 2026. Project summary, not a chat export. No private secrets.

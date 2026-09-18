@@ -2,6 +2,8 @@
 
 Status: diagnostic implementation ready; real-device acceptance pending H-05/H-06.
 
+19 September update: the browser collects up to nine challenge/ack samples, stopping when the latest three meet the unchanged median <=1000 ms and spread <=150 ms limits. This retries transient spikes; it never selects nonconsecutive samples or widens the API limits. Persistent instability still prevents starting a play. Live preview measurements included spikes up to 1843 ms, which cannot be attributed solely to the customer's connection.
+
 ## Measurement model
 
 The server issues a connection challenge and records issue milliseconds. The browser acknowledges immediately; receipt minus issue is a server-observed challenge/ack duration. Take three samples, median as baseline; reject median above 1000 ms or spread above 150 ms before reservation. Samples expire after 2 minutes and are bound to the sampling cookie.
