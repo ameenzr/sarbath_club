@@ -20,15 +20,16 @@ test('normalization, date boundary, prize boundaries and export escaping', async
   assert.equal(csvCell('a"b'), '"a""b"');
 });
 
-async function database() {
+async function database(legacy = false) {
   const mf = new Miniflare({ modules:true, script:'export default {fetch(){return new Response("ok")}}', compatibilityDate:'2026-08-06', d1Databases:['DB'] });
   const db = await mf.getD1Database('DB');
-  const sql = (await Promise.all(['0001_initial.sql','0002_maintenance.sql','0003_prize.sql','0004_retention.sql','0005_play_then_claim.sql'].map(file=>readFile(new URL(`../migrations/${file}`, import.meta.url), 'utf8')))).join('\n');
+  const sql = (await Promise.all(['0001_initial.sql','0002_maintenance.sql','0003_prize.sql','0004_retention.sql', ...(legacy ? [] : ['0005_play_then_claim.sql']), '0006_claim_terms.sql'].map(file=>readFile(new URL(`../migrations/${file}`, import.meta.url), 'utf8')))).join('\n');
   for (const statement of sql.split(';').map(s => s.trim()).filter(Boolean)) await db.prepare(statement).run();
   const config = await db.prepare('SELECT * FROM config WHERE id=1').first();
   assert.equal(config.prize_label,'One free sarbath');
   assert.equal(config.coupon_validity_ms,604800000);
   assert.equal(config.retention_days,30);
+  assert.match(config.prize_terms,/coupon issuance/);
   return { mf, db, config };
 }
 
@@ -36,6 +37,8 @@ test('anonymous reservation, tap finalization and coupon claim lifecycle', async
   const {mf,db,config} = await database();
   try {
     const now = Date.now(), token = await digest(crypto.randomUUID());
+    const unused = await reserve(db, await digest(crypto.randomUUID()), config, 0, now);
+    assert.equal(unused.id, 1);
     // Anonymous reserve — new signature: (db, token, config, baseline, now)
     const play = await reserve(db, token, config, 50, now);
     assert.equal(play.status, 'reserved');
@@ -57,9 +60,11 @@ test('anonymous reservation, tap finalization and coupon claim lifecycle', async
     const retry = await claim(db, token, 'Test User', '+919876543210', tapTime + 2000);
     assert.equal(retry.code, claimed.code);
     // Redeem
-    const redemption = await redeem(db, claimed.id, tapTime + 5000);
+    const coupon = await db.prepare('SELECT id FROM coupons WHERE code=?').bind(claimed.code).first();
+    assert.notEqual(coupon.id, claimed.id);
+    const redemption = await redeem(db, coupon.id, tapTime + 5000);
     assert.equal(redemption.alreadyRedeemed, false);
-    const dup = await redeem(db, claimed.id, tapTime + 6000);
+    const dup = await redeem(db, coupon.id, tapTime + 6000);
     assert.equal(dup.alreadyRedeemed, true);
   } finally { await mf.dispose(); }
 });
@@ -186,6 +191,75 @@ test('expiry, early play, limits and cleanup preserve active coupons', async () 
     await finalize(db, tKeep, keep.expires_at_ms+1);
     await cleanup(db, now);
     assert.ok(await db.prepare('SELECT id FROM plays WHERE id=?').bind(keep.id).first());
+  } finally { await mf.dispose(); }
+});
+
+async function winningPlay(db, config, now) {
+  const token = await digest(crypto.randomUUID());
+  const p = await reserve(db, token, config, 0, now);
+  await finalize(db, token, now + p.waiting_delay_ms + 300);
+  return token;
+}
+
+test('concurrent normalized-phone claims, redemption lock, exact expiry and retention', async () => {
+  const { mf, db, config } = await database();
+  try {
+    const now = Date.now();
+    const tokens = await Promise.all(Array.from({length:3}, () => winningPlay(db, config, now)));
+    const formats = ['9876543210', '+91 (98765) 43210', '0091 98765-43210'];
+    const claims = await Promise.allSettled(tokens.map((t,i) => claim(db,t,'Customer',phoneNumber(formats[i]),now+10000)));
+    assert.equal(claims.filter(c=>c.status==='fulfilled').length,1);
+    assert.equal(claims.filter(c=>c.status==='rejected' && c.reason.key==='active_coupon').length,2);
+    const coupon = await db.prepare('SELECT * FROM coupons').first();
+    assert.equal((await db.prepare('SELECT count(*) AS n FROM coupon_locks').first()).n,1);
+    const redeems = await Promise.all([redeem(db,coupon.id,now+11000),redeem(db,coupon.id,now+11000)]);
+    assert.equal(redeems.filter(r=>!r.alreadyRedeemed).length,1);
+    const next = await winningPlay(db,config,coupon.expires_at-10000);
+    await assert.rejects(claim(db,next,'Customer',coupon.phone,coupon.expires_at-1), e=>e.key==='active_coupon');
+    const fresh = await claim(db,next,'Customer',coupon.phone,coupon.expires_at);
+    assert.ok(fresh.code);
+    assert.equal(fresh.expires_at,coupon.expires_at+604800000);
+    await cleanup(db,coupon.created_at+30*86400000+1);
+    assert.equal(await db.prepare('SELECT id FROM coupons WHERE id=?').bind(coupon.id).first(),null);
+    assert.ok(await db.prepare('SELECT id FROM coupons WHERE code=?').bind(fresh.code).first());
+    await cleanup(db,coupon.expires_at+30*86400000+1);
+    assert.equal((await db.prepare('SELECT count(*) AS n FROM coupons').first()).n,0);
+    assert.equal((await db.prepare('SELECT count(*) AS n FROM coupon_locks').first()).n,0);
+    assert.equal((await db.prepare('SELECT count(*) AS n FROM play_sessions').first()).n,0);
+  } finally { await mf.dispose(); }
+});
+
+test('populated legacy migration preserves codes, recovery, locks and redemption', async () => {
+  const {mf,db,config} = await database(true);
+  try {
+    const now=Date.now(), token=await digest(crypto.randomUUID());
+    await db.prepare(`INSERT INTO attempts(id,request_key,created_at,completed_at,play_date,name,phone,status,reaction_ms,win_threshold_ms,minimum_reaction_ms,prize_label,prize_terms,config_version,coupon_validity_ms,code,expires_at)
+      VALUES(7,?,?,?,?,?,?,'won',300,450,120,?,?,1,604800000,'JB-ABCDE',?)`)
+      .bind(token,now-10000,now-5000,playDate(now),'Legacy Customer','+919876543210',config.prize_label,config.prize_terms,now+604800000).run();
+    await db.prepare('INSERT INTO sessions VALUES(?,7,?,0,1500,?,1,?)').bind(token,now-10000,now+1000,now-10000).run();
+    const migration=await readFile(new URL('../migrations/0005_play_then_claim.sql',import.meta.url),'utf8');
+    for(const sql of migration.split(';').map(s=>s.trim()).filter(Boolean)) await db.prepare(sql).run();
+    const recovered=await loadSession(db,token);
+    assert.equal(recovered.code,'JB-ABCDE');
+    assert.equal((await db.prepare('SELECT name FROM coupons WHERE id=7').first()).name,'Legacy Customer');
+    const next=await winningPlay(db,config,now);
+    await assert.rejects(claim(db,next,'Customer','+919876543210',now+10000),e=>e.key==='active_coupon');
+    assert.equal((await redeem(db,7,now)).alreadyRedeemed,false);
+    await assert.rejects(claim(db,next,'Customer','+919876543210',now+11000),e=>e.key==='active_coupon');
+  } finally { await mf.dispose(); }
+});
+
+test('failed lock write rolls back coupon and preserves winning proof', async () => {
+  const {mf,db,config} = await database();
+  try {
+    const now=Date.now(), token=await winningPlay(db,config,now);
+    await db.prepare("CREATE TRIGGER fail_lock BEFORE INSERT ON coupon_locks BEGIN SELECT RAISE(ABORT, 'injected failure'); END").run();
+    await assert.rejects(claim(db,token,'Customer','+919876543210',now+10000));
+    assert.equal((await db.prepare('SELECT count(*) AS n FROM coupons').first()).n,0);
+    assert.equal((await db.prepare('SELECT count(*) AS n FROM coupon_locks').first()).n,0);
+    assert.equal((await loadSession(db,token)).status,'won');
+    await db.prepare('DROP TRIGGER fail_lock').run();
+    assert.ok((await claim(db,token,'Customer','+919876543210',now+11000)).code);
   } finally { await mf.dispose(); }
 });
 

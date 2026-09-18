@@ -27,7 +27,7 @@ Initial local Chromium comparison (18 September 2026, five scripted trials): bro
 
 Run the API with `npm run dev:api`, then Vite with `npm run dev`. Open `http://127.0.0.1:5173/?diagnostic` on the development computer. The result includes samples, the browser's approximate local interval, server interval and their difference. Diagnostic code is disabled in the production build and never affects award decisions.
 
-Use synthetic data and a new synthetic number per reserved play. Never reset production daily limits for testing. For phone testing, expose a deliberately configured nonproduction preview; the default local servers bind only to the development machine.
+Play anonymously; use synthetic identity and a unique synthetic phone only when claiming. Never alter production coupon eligibility for testing. For phone testing, expose a deliberately configured nonproduction preview; the default local servers bind only to the development machine.
 
 ## Proposed acceptance, requiring owner agreement
 

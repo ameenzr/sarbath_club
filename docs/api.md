@@ -20,7 +20,7 @@ All errors return JSON `{ error: key }`, no-store. POST requires JSON, bounded b
 1. **Play anonymously**: Customer taps play — the browser samples connectivity, generates a UUID credential, and calls `/api/flash`. No name, phone, or Turnstile is required.
 2. **Tap**: When the screen flashes blue, the customer taps. The browser calls `/api/tap`. The server calculates reaction time (120–449 ms wins).
 3. **Claim after winning**: Only if the tap result is `won` (no coupon code yet), the customer sees an identity form and Turnstile. After verification, the browser calls `/api/claim` with name, phone, and Turnstile token.
-4. **One coupon at a time**: Each phone may hold one active coupon. If a phone already has an unexpired coupon, `/api/claim` returns `active_coupon` (409). After expiry or redemption of the prior coupon, the phone may claim again.
+4. **One coupon at a time**: Each phone may hold one active coupon. If a phone already has an unexpired coupon, `/api/claim` returns `active_coupon` (409). After expiry of the prior coupon, the phone may claim again. Redemption does not release eligibility before expiry.
 5. **Immediate replay**: Lost, too early, or expired plays allow immediate replay with a new UUID.
 
 ## Identity and normalization
@@ -29,7 +29,7 @@ Phone accepts Indian 10-digit mobile, +91, or 0091 forms with spaces/hyphens/par
 
 ## Atomicity
 
-Plays are reserved at Start (anonymous). Verification/latency failures before reservation consume nothing. Reservation inserts play then session in a D1 batch; session selects the play by the unique credential digest. Finalization conditionally updates reserved play, then marks corresponding session used in the same batch. Replay returns persisted result. Coupon claiming inserts into coupons and coupon_locks in a batch with phone-level uniqueness. Code collisions roll back and retry up to five times. Redemption is one conditional UPDATE, then primary readback.
+Plays are reserved at Start (anonymous). Latency failures before reservation create no play. Failed claim verification preserves the winning play without issuing a coupon. Reservation inserts play then session in a D1 batch; session selects the play by the unique credential digest. Finalization conditionally updates reserved play, then marks corresponding session used in the same batch. Replay returns persisted result. Coupon claiming inserts into coupons and coupon_locks in a batch with phone-level uniqueness. Code collisions roll back and retry up to five times. Redemption is one conditional UPDATE, then primary readback.
 
 ## Sampling
 

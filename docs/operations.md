@@ -1,6 +1,6 @@
 # Operations and release runbook
 
-Status: local implementation verified; isolated remote preview deployed. Real secrets, owner decisions, and launch verification pending. Commands checked against Wrangler 4.134.0 on 18 September 2026. Do not deploy the dummy database ID in the current local configuration.
+Status: automated implementation verified; isolated remote preview updated through migration 0006 with play disabled. Secret setup and reward/retention decisions are resolved. Real challenge/staff/device acceptance and production release remain pending; use docs/acceptance.md. Commands verified using installed Wrangler 4.134.0. Do not deploy the dummy database ID in the local configuration.
 
 ## Configuration inventory
 
@@ -39,7 +39,7 @@ Create a managed Turnstile widget allowing `sarbath-club-preview.pages.dev`. Ent
 
 ## Prize and policy changes
 
-Record the owner-approved label, terms, coupon validity and retention in `docs/decisions.md`. Confirmed policy is one free sarbath, valid seven days from winning, and automatic 30-day retention without a customer deletion feature. Update the `config` record through parameterized administrative queries or verified dashboard SQL, increasing `version`. Every attempt copies the prize and thresholds, so later changes leave issued coupons unchanged.
+Record the owner-approved label, terms, coupon validity and retention in `docs/decisions.md`. Confirmed policy is one free sarbath, valid seven days from claim issuance, and automatic 30-day retention without a customer deletion feature. Update the `config` record through parameterized administrative queries or verified dashboard SQL, increasing `version`. Every attempt copies the prize and thresholds, so later changes leave issued coupons unchanged.
 
 Defaults seeded by migrations are explicitly local demo values. Production must replace them before approval/enablement. Threshold changes require revisiting timing acceptance when material. Keep coupons valid according to their original saved terms.
 
@@ -63,11 +63,11 @@ For an incident, disable new play, record the current deployment and database bo
 
 ## Automatic retention
 
-Cleanup expires abandoned attempts, removes old sampling/rate-limit/staff-session records, deletes attempt records beyond retention only after coupon expiry and the play date has passed, and removes old result credentials after 24 hours. Coupon records remain searchable by authorized staff after their session credential expires.
+Cleanup expires abandoned plays and removes old sampling, rate-limit and staff-session records. Coupon identity records are deleted after 30 days from issuance once expired; their phone locks cascade away. Anonymous plays older than 30 days are removed when no retained coupon references them; their recovery sessions cascade away. Legacy attempts/sessions are also cleaned for compatibility.
 
-Pages Functions have no scheduled handler here. The separate `worker/cleanup.js` is deployed as `sarbath-club-preview-cleanup` with `wrangler.cleanup.preview.toml`, bound to the isolated preview D1 database and an hourly Cron Trigger. Its public HTTP endpoint is disabled. It runs only for an approved policy. Request-time maintenance is throttled to once a minute during ping as a fallback. Before production release, provision the corresponding production schedule and verify its execution; no production cleanup worker exists yet.
+Pages Functions have no scheduled handler here. The separate `worker/cleanup.js` is deployed as `sarbath-club-preview-cleanup` with `wrangler.cleanup.preview.toml`, bound to the isolated preview D1 database and an hourly Cron Trigger. Its public HTTP endpoint is disabled. Apply schema migrations before runtime updates and redeploy this separate worker whenever its imported server/core.js changes; deploying Pages does not update it. It runs only for an approved policy. Request-time maintenance is throttled to once a minute during ping as a fallback. Before production release, provision the corresponding production schedule and verify its execution; no production cleanup worker exists yet.
 
-Customer records are retained for 30 days from play, then removed on the next regular cleanup cycle. There is no customer deletion-request section or endpoint. Owner administrative maintenance remains separate from customer access. Apply the same retention policy to owner exports and incident copies; never store them in public assets.
+Customer identity records are retained for 30 days from coupon issuance, then removed on the next regular cleanup cycle. There is no customer deletion-request section or endpoint. Owner administrative maintenance remains separate from customer access. Apply the same retention policy to owner exports and incident copies; never store them in public assets.
 
 CSV export consumers must use `csvCell` escaping from `server/core.js`; SQL backups are for database recovery, not direct spreadsheet opening. Do not change stored names to address spreadsheet formula injection.
 

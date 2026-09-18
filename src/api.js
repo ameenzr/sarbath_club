@@ -1,6 +1,6 @@
 export const messages = {
   win_required: 'Only a winning play can claim a reward.',
-  active_coupon: 'You already have an active coupon. Use it before claiming another!',
+  active_coupon: 'Your phone already has a coupon within its validity period. Claim again after it expires.',
   verification_failed: "We couldn't verify your request. Refresh and try again.",
   high_latency: 'Your connection seems slow or unstable. Try a stronger connection.',
   connection_check_required: 'Please check your connection and try again.',

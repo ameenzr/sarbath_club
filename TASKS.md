@@ -3,7 +3,7 @@
 **Project:** Sarbath Club — Reaction Tap Game  
 **Updated:** 18 September 2026  
 **Source of truth:** [PRD.md](PRD.md)  
-**Current status:** Local implementation and verification complete. Production policy, Cloudflare access, remote checks, and physical acceptance pending.
+**Current status:** Play-then-claim fixes verified: 11 Node and 5 browser tests pass. Preview migrations 0001–0006 and updated Pages/cleanup Worker deployed with play disabled. Physical acceptance and production release pending; walkthrough in docs/acceptance.md.
 
 ## 1. Start command
 
@@ -65,8 +65,8 @@ Record checkpoint status in `docs/decisions.md`: `pending`, `requested`, `resolv
 
 | ID | Trigger | Required human contribution | Blocks |
 |---|---|---|---|
-| H-01 | Before production prize configuration | Prize, purchase requirement, expiry, redemption hours, unavailable-prize policy, consolation policy | Production rewards only; use labeled demo values locally |
-| H-02 | Before collecting real customer details | Retention duration, deletion contact, supported devices, customer-phone versus kiosk mode | Production data collection and final privacy text |
+| H-01 | Before production prize configuration | Prize, purchase requirement, expiry, redemption hours, unavailable-prize policy, consolation policy | Production release only; confirmed prize is one free sarbath valid seven days |
+| H-02 | Before collecting real customer details | Retention is confirmed as 30 days with automatic cleanup and no customer deletion UI; supported devices and physical acceptance remain | Production data collection and final privacy text |
 | H-03 | Remote environment work lacks access | Sign in to the selected Cloudflare account, complete MFA, confirm target account if ambiguous; GitHub access only if Git integration is chosen | Remote resource setup; local work continues |
 | H-04 | Real verification/authentication setup | Create or select Turnstile configuration and enter required secrets through secure provider tooling; return only completion confirmation and public configuration | Real-service verification and authenticated remote testing |
 | H-05 | Timing prototype is measured | Agree on timing-error tolerance and acceptable abuse risk; accept measured results or choose a revised approach | Real-prize launch; other implementation continues |
@@ -113,21 +113,21 @@ are blocking further progress.
 
 - [x] **T-06 — Implement form, waiting, and tap screens.** Depends on T-05. Add accessible fields, shared phone normalization rules, loading/verification states, PRD privacy copy, and immediate duplicate-submit protection. Accept waiting delay from the server contract. Handle early taps and cancel timers on unmount; a rerender must not create a new delay or session. Support keyboard and pointer input. **Exit:** fixture flow works; early taps, timer cleanup, and repeated input have defined behavior.
 
-- [x] **T-07 — Implement outcomes and recovery UI.** Depends on T-06. Show prize snapshot, code, validity, and friendly PRD messages. Distinguish expired plays from normal losses. Provide pending/recovering states for uncertain requests. **Exit:** every outcome and network recovery path renders correctly; the UI never offers a second daily play after reservation.
+- [x] **T-07 — Implement outcomes and recovery UI.** Depends on T-06. Show prize snapshot, code, validity, and friendly PRD messages. Distinguish expired plays from normal losses. Provide pending/recovering states for uncertain requests. **Exit:** every outcome and network recovery path renders correctly; pending recovery does not restart a timer, and completed plays allow immediate replay.
 
 ### Phase 2 — Persistent state and invariants
 
-- [x] **T-08 — Implement schema and local migrations.** Depends on T-02/T-03. Create attempts, sessions, config, and any required auth/rate-limit records. Include PRD fields, code uniqueness, daily uniqueness, attempt/session relationship, status constraints, and search indexes. Add idempotency fields if required by the agreed API. Store timing in epoch milliseconds and dates using the shop timezone. **Exit:** clean local migration succeeds; constraints reject duplicate attempts/codes and invalid state; document local and remote migration commands verified against the installed CLI.
+- [x] **T-08 — Implement schema and local migrations.** Depends on T-02/T-03. Create attempts, sessions, config, and any required auth/rate-limit records. Include PRD fields, code uniqueness, anonymous play/session uniqueness, attempt/session relationship, status constraints, and search indexes. Add idempotency fields if required by the agreed API. Store timing in epoch milliseconds and dates using the shop timezone. **Exit:** clean local migration succeeds; constraints reject duplicate attempts/codes and invalid state; document local and remote migration commands verified against the installed CLI.
 
 - [x] **T-09 — Implement shared validation and lifecycle helpers.** Depends on T-08. Validate bounded inputs, normalize Indian phone formats consistently, derive local date server-side, generate secure tokens/codes, and snapshot configuration. Preserve valid name text; handle CSV formula escaping when exporting, not by altering stored customer names. **Exit:** meaningful boundary tests cover normalization, midnight, thresholds, code alphabet, and invalid input.
 
-- [x] **T-10 — Implement atomic reservation and finalization.** Depends on T-09. Reserve a daily attempt with its session in one supported atomic operation. Finalize session consumption, outcome, and coupon together using conditional writes; retry bounded code collisions. Implement expiry and recovery without recreating attempts. **Exit:** database-backed concurrency tests prove one reservation and one final outcome; injected failures cannot leave a coupon without its finalized attempt or consume a session without its result.
+- [x] **T-10 — Implement atomic reservation and finalization.** Depends on T-09. Reserve an anonymous play with its session in one supported atomic operation. Finalize session consumption and outcome together; issue coupons only through verified winning claims using conditional writes; retry bounded code collisions. Implement expiry and recovery without recreating attempts. **Exit:** database-backed concurrency tests prove idempotent reservation and one final outcome per credential; injected failures cannot leave a coupon without its finalized attempt or consume a session without its result.
 
 ### Phase 3 — Customer API and security
 
 - [x] **T-11 — Implement verification and request protection.** Depends on T-02/T-03. Verify Turnstile server-side before reservation, bind successful verification to the attempt flow, validate expected verification metadata, and handle expired or failed tokens. Add request size/method/content checks and no-store responses. Use official test configuration locally; fail closed if required production configuration is missing. **Exit:** invalid verification cannot create an attempt; approved retry flow does not require replaying a consumed verification token incorrectly.
 
-- [x] **T-12 — Implement ping and Start (`/api/flash`).** Depends on T-04/T-10/T-11. Keep ping non-consuming. Enforce validated sampling policy, configuration, input, and daily eligibility before atomically reserving. Return server-owned delay and an opaque session credential. Implement recovery for a lost Start response using the contract's idempotency mechanism; do not let arbitrary phone lookup retrieve a session. **Exit:** concurrent Start, high latency, verification failure, and lost-response retries preserve PRD play-consumption rules.
+- [x] **T-12 — Implement ping and Start (`/api/flash`).** Depends on T-04/T-10/T-11. Keep ping non-consuming. Enforce validated sampling policy, configuration, input, and connection and release eligibility before atomically reserving. Return server-owned delay and an opaque session credential. Implement recovery for a lost Start response using the contract's idempotency mechanism; do not let arbitrary phone lookup retrieve a session. **Exit:** concurrent Start, high latency, verification failure, and lost-response retries preserve PRD play-consumption rules.
 
 - [x] **T-13 — Implement tap and result recovery.** Depends on T-12. Capture receipt time at the documented point before avoidable work. Apply the agreed timing formula, early-tap handling, thresholds, and expiry. Finalize atomically. Duplicate taps and authenticated result recovery return the persisted outcome without a new code. Keep session credentials out of URLs and logs. **Exit:** boundary, replay, expiry-race, and lost-response tests pass; result access cannot expose another session's data.
 
@@ -169,7 +169,7 @@ are blocking further progress.
 
 These rules prevent the implementation agent from reintroducing superseded behavior:
 
-- Reserve the daily play at Start, not after a tap. Ping must not insert an incomplete session that violates required fields.
+- Reserve an anonymous play at Start; collect identity and verify only after a win. Atomically claim one coupon per phone until expiry, including after redemption. Ping must not insert an incomplete session that violates required fields.
 - Use server-generated waiting delay and a documented, validated latency method. Do not accept arbitrary client delay or latency as authority.
 - Verify Turnstile before reservation. Do not postpone all bot protection to the tap endpoint.
 - Return the stored result on duplicate taps instead of discarding the only recovery route after a lost response.

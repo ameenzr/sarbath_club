@@ -16,8 +16,25 @@ test('local Worker + D1 anonymous play flow with official Turnstile test verific
   await page.getByRole('button',{name:/PLAY AGAIN/}).click();
   await page.getByRole('button',{name:/LET.S PLAY/}).click();
   await expect(page.getByRole('button',{name:/GET READY/})).toBeVisible({timeout:20000});
-  // Wait for flash and tap — timing determines outcome
-  // Recovery: just let it expire or tap; we're testing the flow structure
+  await page.evaluate(()=>{
+    const observer=new MutationObserver(()=>{
+      const target=document.querySelector('.play-field.flash');
+      if(!target)return; observer.disconnect(); setTimeout(()=>target.click(),250);
+    });
+    observer.observe(document.getElementById('root'),{childList:true,subtree:true,attributes:true});
+  });
+  await expect(page.getByLabel('Your name')).toBeVisible({timeout:20000});
+  await page.getByLabel('Your name').fill('Synthetic live customer');
+  // Synthetic unique phone avoids reusing the previous run's seven-day lock.
+  const phone='9'+String(Date.now()).slice(-9);
+  await page.getByLabel('Mobile number').fill(phone);
+  await page.getByRole('button',{name:/CLAIM REWARD/}).click();
+  await expect(page.locator('.coupon strong')).toHaveText(/^JB-[A-Z2-9]{5}$/,{timeout:20000});
+  const code=await page.locator('.coupon strong').innerText();
+  await page.reload();
+  await expect(page.locator('.coupon strong')).toHaveText(code);
+  await page.getByRole('button',{name:/PLAY AGAIN/}).click();
+  await expect(page.getByText(`Previously claimed code: ${code}`)).toBeVisible();
 });
 
 test('initial local timing comparison at a scripted 300 ms interval',async({page})=>{
