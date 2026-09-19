@@ -122,6 +122,13 @@ export async function onRequest({ request, env }) {
         const rows = await db.prepare(`SELECT c.*,p.reaction_ms FROM coupons c JOIN plays p ON p.id=c.play_id WHERE c.${code ? 'code' : 'phone'}=? ORDER BY c.created_at DESC LIMIT 10`).bind(code ? q : phoneNumber(q)).all();
         return json({ results: rows.results });
       }
+      if (path === 'staff/coupons') {
+        const view = input.view === 'redeemed' ? 'redeemed' : 'recent';
+        const rows = view === 'redeemed'
+          ? await db.prepare(`SELECT c.*,p.reaction_ms,'Quick Sip Challenge' AS game_name FROM coupons c JOIN plays p ON p.id=c.play_id WHERE c.redeemed=1 ORDER BY c.redeemed_at DESC,c.id DESC`).all()
+          : await db.prepare(`SELECT c.*,p.reaction_ms,'Quick Sip Challenge' AS game_name FROM coupons c JOIN plays p ON p.id=c.play_id WHERE c.redeemed=0 ORDER BY c.created_at DESC,c.id DESC`).all();
+        return json({ results: rows.results });
+      }
       if (path === 'staff/redeem') {
         if (!Number.isSafeInteger(input.id) || input.id < 1) throw new ApiError('invalid_input');
         return json(await redeem(db, input.id, received));

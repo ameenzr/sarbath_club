@@ -23,7 +23,7 @@ test('normalization, date boundary, prize boundaries and export escaping', async
 async function database(legacy = false) {
   const mf = new Miniflare({ modules:true, script:'export default {fetch(){return new Response("ok")}}', compatibilityDate:'2026-08-06', d1Databases:['DB'] });
   const db = await mf.getD1Database('DB');
-  const sql = (await Promise.all(['0001_initial.sql','0002_maintenance.sql','0003_prize.sql','0004_retention.sql', ...(legacy ? [] : ['0005_play_then_claim.sql']), '0006_claim_terms.sql'].map(file=>readFile(new URL(`../migrations/${file}`, import.meta.url), 'utf8')))).join('\n');
+  const sql = (await Promise.all(['0001_initial.sql','0002_maintenance.sql','0003_prize.sql','0004_retention.sql', ...(legacy ? [] : ['0005_play_then_claim.sql']), '0006_claim_terms.sql', ...(legacy ? [] : ['0007_release_redeemed_coupons.sql'])].map(file=>readFile(new URL(`../migrations/${file}`, import.meta.url), 'utf8')))).join('\n');
   for (const statement of sql.split(';').map(s => s.trim()).filter(Boolean)) await db.prepare(statement).run();
   const config = await db.prepare('SELECT * FROM config WHERE id=1').first();
   assert.equal(config.prize_label,'One free sarbath');
@@ -201,7 +201,7 @@ async function winningPlay(db, config, now) {
   return token;
 }
 
-test('concurrent normalized-phone claims, redemption lock, exact expiry and retention', async () => {
+test('concurrent normalized-phone claims, redemption release and retention', async () => {
   const { mf, db, config } = await database();
   try {
     const now = Date.now();
@@ -214,11 +214,11 @@ test('concurrent normalized-phone claims, redemption lock, exact expiry and rete
     assert.equal((await db.prepare('SELECT count(*) AS n FROM coupon_locks').first()).n,1);
     const redeems = await Promise.all([redeem(db,coupon.id,now+11000),redeem(db,coupon.id,now+11000)]);
     assert.equal(redeems.filter(r=>!r.alreadyRedeemed).length,1);
-    const next = await winningPlay(db,config,coupon.expires_at-10000);
-    await assert.rejects(claim(db,next,'Customer',coupon.phone,coupon.expires_at-1), e=>e.key==='active_coupon');
-    const fresh = await claim(db,next,'Customer',coupon.phone,coupon.expires_at);
+    assert.equal((await db.prepare('SELECT count(*) AS n FROM coupon_locks').first()).n,0);
+    const next = await winningPlay(db,config,now+12000);
+    const fresh = await claim(db,next,'Customer',coupon.phone,now+20000);
     assert.ok(fresh.code);
-    assert.equal(fresh.expires_at,coupon.expires_at+604800000);
+    assert.equal(fresh.expires_at,now+20000+604800000);
     await cleanup(db,coupon.created_at+30*86400000+1);
     assert.equal(await db.prepare('SELECT id FROM coupons WHERE id=?').bind(coupon.id).first(),null);
     assert.ok(await db.prepare('SELECT id FROM coupons WHERE code=?').bind(fresh.code).first());
@@ -239,13 +239,15 @@ test('populated legacy migration preserves codes, recovery, locks and redemption
     await db.prepare('INSERT INTO sessions VALUES(?,7,?,0,1500,?,1,?)').bind(token,now-10000,now+1000,now-10000).run();
     const migration=await readFile(new URL('../migrations/0005_play_then_claim.sql',import.meta.url),'utf8');
     for(const sql of migration.split(';').map(s=>s.trim()).filter(Boolean)) await db.prepare(sql).run();
+    const releaseMigration=await readFile(new URL('../migrations/0007_release_redeemed_coupons.sql',import.meta.url),'utf8');
+    for(const sql of releaseMigration.split(';').map(s=>s.trim()).filter(Boolean)) await db.prepare(sql).run();
     const recovered=await loadSession(db,token);
     assert.equal(recovered.code,'JB-ABCDE');
     assert.equal((await db.prepare('SELECT name FROM coupons WHERE id=7').first()).name,'Legacy Customer');
     const next=await winningPlay(db,config,now);
     await assert.rejects(claim(db,next,'Customer','+919876543210',now+10000),e=>e.key==='active_coupon');
     assert.equal((await redeem(db,7,now)).alreadyRedeemed,false);
-    await assert.rejects(claim(db,next,'Customer','+919876543210',now+11000),e=>e.key==='active_coupon');
+    assert.ok((await claim(db,next,'Customer','+919876543210',now+11000)).code);
   } finally { await mf.dispose(); }
 });
 

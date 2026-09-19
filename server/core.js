@@ -106,7 +106,10 @@ export async function claim(db, token, name, phone, now = Date.now(), makeCode =
   throw new ApiError('temporarily_unavailable', 503);
 }
 export async function redeem(db, id, now = Date.now()) {
-  const update = await db.prepare("UPDATE coupons SET redeemed=1,redeemed_at=? WHERE id=? AND redeemed=0 AND expires_at>?").bind(now, id, now).run();
+  const [update] = await db.batch([
+    db.prepare("UPDATE coupons SET redeemed=1,redeemed_at=? WHERE id=? AND redeemed=0 AND expires_at>?").bind(now, id, now),
+    db.prepare('DELETE FROM coupon_locks WHERE coupon_id=? AND EXISTS(SELECT 1 FROM coupons WHERE id=? AND redeemed=1)').bind(id, id)
+  ]);
   const row = await db.prepare('SELECT redeemed,redeemed_at,expires_at FROM coupons WHERE id=?').bind(id).first();
   if (!row) throw new ApiError('invalid_coupon', 404);
   if (!row.redeemed) throw new ApiError('coupon_expired', 409);

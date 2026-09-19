@@ -3,7 +3,7 @@
 **Project:** Sarbath Club — Reaction Tap Game  
 **Updated:** 18 September 2026  
 **Source of truth:** [PRD.md](PRD.md)  
-**Current status:** Play-then-claim fixes verified: 11 Node and 5 browser tests pass. Preview migrations 0001–0006 and updated Pages/cleanup Worker deployed with play disabled. Physical acceptance and production release pending; walkthrough in docs/acceptance.md.
+**Current status:** Refined customer and staff flows verified: 13 Node and 6 browser tests pass. Pages, cleanup Worker, and preview migrations 0001–0007 are deployed with customer play enabled at the stable preview URL. Physical acceptance and a separately provisioned production environment remain pending; walkthrough in docs/acceptance.md.
 
 ## 1. Start command
 

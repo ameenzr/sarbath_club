@@ -1,6 +1,6 @@
 # Sarbath Club — Quick Sip Challenge
 
-A mobile-first reaction game with unlimited anonymous plays and counter redemption. Win first, then enter name/mobile and complete verification to claim one free sarbath. Each phone can claim one coupon per seven-day validity period, including after redemption. React/Vite serves the UI; Cloudflare Pages Functions and D1 manage plays, claims and redemption. Remote customer play stays disabled pending physical acceptance and launch checks in TASKS.md.
+A mobile-first reaction game with unlimited anonymous plays and counter redemption. Win first, then enter name/mobile and complete verification to claim one free sarbath. Each phone can hold one unredeemed coupon; redemption immediately makes that number eligible to claim another win. React/Vite serves the UI; Cloudflare Pages Functions and D1 manage plays, claims and redemption.
 
 ## Run locally
 

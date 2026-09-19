@@ -20,7 +20,7 @@ All errors return JSON `{ error: key }`, no-store. POST requires JSON, bounded b
 1. **Play anonymously**: Customer taps play — the browser samples connectivity, generates a UUID credential, and calls `/api/flash`. No name, phone, or Turnstile is required.
 2. **Tap**: When the screen flashes blue, the customer taps. The browser calls `/api/tap`. The server calculates reaction time (120–449 ms wins).
 3. **Claim after winning**: Only if the tap result is `won` (no coupon code yet), the customer sees an identity form and Turnstile. After verification, the browser calls `/api/claim` with name, phone, and Turnstile token.
-4. **One coupon at a time**: Each phone may hold one active coupon. If a phone already has an unexpired coupon, `/api/claim` returns `active_coupon` (409). After expiry of the prior coupon, the phone may claim again. Redemption does not release eligibility before expiry.
+4. **One coupon at a time**: Each phone may hold one unredeemed coupon. If a phone already has an unredeemed, unexpired coupon, `/api/claim` returns `active_coupon` (409). Redemption immediately releases the phone number so it may claim another winning coupon; expiry also releases it.
 5. **Immediate replay**: Lost, too early, or expired plays allow immediate replay with a new UUID.
 
 ## Identity and normalization

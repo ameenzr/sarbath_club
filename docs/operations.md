@@ -1,6 +1,6 @@
 # Operations and release runbook
 
-Status: automated implementation verified; isolated remote preview updated through migration 0006 with play disabled. Secret setup and reward/retention decisions are resolved. Real challenge/staff/device acceptance and production release remain pending; use docs/acceptance.md. Commands verified using installed Wrangler 4.134.0. Do not deploy the dummy database ID in the local configuration.
+Status: automated implementation verified; isolated remote Pages target is configured with customer play enabled. Secret setup and reward/retention decisions are resolved. The current release adds migration 0007 so redemption immediately releases phone eligibility. Commands verified using installed Wrangler 4.134.0. Do not deploy the dummy database ID in the local configuration.
 
 ## Configuration inventory
 

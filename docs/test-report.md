@@ -1,36 +1,28 @@
 # Verification report
 
-Updated 19 September 2026. Local synthetic data and disabled Cloudflare preview.
+Updated 20 September 2026.
 
-Later owner-authorized preview acceptance: customer play is enabled. Connection-check follow-up deployed at https://a8489765.sarbath-club-preview.pages.dev/; two focused client tests, parser check and build passed. Live retry algorithm obtained consecutive samples 180/104/100 ms and anonymous Start returned 200 reserved. The API limits remain unchanged. Earlier disabled-preview smoke evidence below is historical.
+## Current release
 
-## Current checks
+- Stable Pages URL: `https://sarbath-club-preview.pages.dev/`
+- Deployment URL: `https://a8621354.sarbath-club-preview.pages.dev/`
+- Remote D1 target: `sarbath-club-preview-db`
+- Remote migrations: 0001–0007 applied; Wrangler reports no pending migrations.
+- Cleanup Worker: `sarbath-club-preview-cleanup`, version `4a5ca3f5-0276-42d1-80f8-3d01b891beea`, hourly schedule.
+- Runtime configuration smoke test: prize is one free sarbath, retention is 30 days, and customer play is enabled.
 
-### Mobile redesign — 19 September
+## Automated checks
 
-Published preview: https://7450440e.sarbath-club-preview.pages.dev/ (stable sarbath-club-preview.pages.dev). Customer play remains enabled for owner testing.
+- `npm run build`: passed. Final client output is 244.75 kB JavaScript and 23.31 kB CSS before gzip.
+- `npm run check`: passed.
+- `npm test`: 13/13 Node tests passed. Coverage includes timing thresholds, anonymous play, recovery, claims, duplicate-phone locking, immediate eligibility after redemption, expiry, collision retries, rollback behavior, migrations, cleanup, staff authentication, and origin checks.
+- `npm run test:e2e`: 6/6 browser tests passed. Coverage includes 320–768 px layouts, customer/staff/privacy screens, all game outcomes, real local Worker/D1 claim and recovery, copy-code feedback, store-location link, and reduced motion.
+- `npm audit --omit=dev`: zero production dependency vulnerabilities.
+- Final scripted 300 ms timing comparison errors were +13, +22, +9, +12, and +8 ms in local Chromium. These are software checks, not physical display measurements.
+- Live smoke tests returned 200 for `/`, `/staff`, `/privacy`, `/api/config`, and `/logo-backgroundless.webp`.
 
-- Minimal customer, counter and privacy screens; compact single-column layout. Removed external font loading; system fonts, safe-area support, 16 px inputs and 52 px primary controls.
-- Build and parser/module check pass. Client output: 238.74 kB JS, 6.52 kB CSS (previous 240.76/8.16 kB).
-- All six browser tests pass in 30.5 seconds, including live local verified claim/recovery and layout checks at 320/360/390/430/768 px. Start remains visible in a 640 px viewport; narrow claim inputs do not overflow or trigger small-font iOS zoom. Native device behavior still needs physical acceptance.
-- Reviewed 320 px welcome/claim and dark staff screenshots. Verification uses compact mode below its 300 px minimum normal width instead of clipping the widget.
-- Current software timing comparisons: +2/+20/+27/+19/+34 ms. These do not establish physical precision.
-- Core timing/claim schema and limits are unchanged; no new cleanup Worker deployment required for this UI update.
+The launch logo is delivered as a 512 px transparent WebP at 216 KB, reduced from the 1.37 MB source PNG while preserving the supplied artwork.
 
-- Production build passes (240.56 kB JS, 8.16 kB CSS). Parser/module check passes; this is not strict JS type checking.
-- All 11 Node tests pass (47.8 seconds, final run including migration 0006). Coverage includes exact thresholds, anonymous starts, idempotent finalization/claims, simultaneous normalized-phone claims, redeemed-but-unexpired blocking, exact-expiry eligibility, collision retries, injected lock-write rollback, populated legacy migration, customer/lock/session retention, staff authentication and origin checks.
-- Lifecycle redemption deliberately uses coupon IDs differing from play IDs.
-- Local and preview migrations 0001–0006 are applied, including corrected future terms from claim issuance.
-- All five browser tests pass (51.2 seconds). The live test now submits a winning claim to the real local Pages Function, which calls official test-key Siteverify; widget acquisition is replaced. This does not establish real-site verification.
-- Remote preview had zero legacy attempts/sessions before additive migration 0005. It is now applied; migration 0006 also passed.
-- Pre-migration preview Time Travel bookmark: 00000019-00000000-000050ea-993ddbed630c76b79c44d008631534a7. No SQL data export was performed. A restore requires explicit authorization and is not part of this update.
+## Remaining real-world checks
 
-## Evidence limits
-
-Earlier five-browser-test passes and timing trials are historical evidence. The old report's daily-attempt acceptance mapping is superseded by PRD version 1.1. Current tests do not establish physical timing, sunlight readability, actual staff password correctness, real hostname/action challenge completion, account-wide cost limits, or a remote restore rehearsal.
-
-The approximate timing model can be manipulated by delaying connection samples. Physical acceptance and owner abuse-risk/tolerance decisions remain required before real-prize launch. Test records are synthetic; screenshots/timing output are under ignored test-results/.
-
-## Release status
-
-Preview remains GAME_ENABLED=false. Pages deployed at https://ae06d082.sarbath-club-preview.pages.dev/ and its separate hourly cleanup worker was redeployed (version cd3ba866-debf-4f36-a4cc-0e5e73943da9, hourly cron). Homepage/staff/privacy/config smoke tests returned 200; config enabled=false, retention=30; anonymous start returned 503 game_unavailable. Scheduler execution is not yet independently observed. Production has not been provisioned/enabled by this update. Real phone/shop-network measurements, real verification/staff walkthrough, printed QR and backup/restore acceptance remain human launch gates.
+Automated checks do not establish physical timing accuracy, sunlight readability, mobile-network behavior, printed-QR scanning, or staff proficiency. The reaction estimate remains vulnerable to client automation and manipulated connection samples. Complete physical phone/shop-network and staff acceptance before treating the game as abuse-resistant for high-value prizes.

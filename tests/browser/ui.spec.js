@@ -1,6 +1,9 @@
 import { test, expect } from '@playwright/test';
 test('customer preview, mobile layout, privacy and staff login', async ({page})=>{
+  await page.emulateMedia({reducedMotion:'reduce'});
   await page.goto('/');
+  await expect(page.getByRole('heading',{name:/Pick a game/})).toBeVisible();
+  await page.getByRole('button',{name:/^Play/}).click();
   await expect(page.getByRole('heading',{name:/Quick sip challenge/})).toBeVisible();
   // New flow: no name/phone fields on welcome screen
   await expect(page.getByRole('button',{name:/let.s play/i})).toBeVisible();
@@ -13,6 +16,7 @@ test('customer preview, mobile layout, privacy and staff login', async ({page})=
   await page.screenshot({path:'test-results/staff.png',fullPage:true});
 });
 test('fixture API drives anonymous play, early tap, replay and winning claim',async({page})=>{
+  await page.emulateMedia({reducedMotion:'reduce'});
   let status='reserved';
   await page.route('**/api/config',r=>r.fulfill({json:{enabled:true,prize:{label:'Test topping',terms:'Synthetic only'}}}));
   await page.route('**/api/ping',r=>r.fulfill({json:r.request().postDataJSON().challenge?{sample:10}:{challenge:'test'}}));
@@ -26,6 +30,7 @@ test('fixture API drives anonymous play, early tap, replay and winning claim',as
   await page.route('https://challenges.cloudflare.com/**',r=>r.fulfill({contentType:'application/javascript',body:'window.turnstile={render:(el,opts)=>{opts.callback("test");return 1},remove:()=>{}}'}));
   // Anonymous start — no name/phone form before play
   await page.goto('/');
+  await page.getByRole('button',{name:/^Play/}).click();
   await page.getByRole('button',{name:/let.s play/i}).click();
   // Early tap
   await page.getByRole('button',{name:/GET READY/}).click();
@@ -43,14 +48,19 @@ test('fixture API drives anonymous play, early tap, replay and winning claim',as
   await page.getByRole('button',{name:/claim reward/i}).click();
   // Should show coupon code
   await expect(page.getByText('JB-ABCDE')).toBeVisible();
+  await page.getByRole('button',{name:'Copy coupon code'}).click();
+  await expect(page.getByRole('button',{name:'Coupon code copied'})).toBeVisible();
+  await expect(page.getByRole('link',{name:'Sarbath Club store location'})).toHaveAttribute('href','https://maps.app.goo.gl/wRiGJTGCmUnWQVrq9');
   await page.screenshot({path:'test-results/win.png',fullPage:true});
 });
 
 test('minimal interface fits small phones, keeps start visible and verification accessible',async({page})=>{
+  await page.emulateMedia({reducedMotion:'reduce'});
   await page.route('**/api/config',r=>r.fulfill({json:{enabled:true,retentionDays:30,prize:{label:'One free sarbath',terms:'Synthetic'}}}));
   for(const width of [320,360,390,430,768]) {
     await page.setViewportSize({width,height:640});
     await page.goto('/');
+    await page.getByRole('button',{name:/^Play/}).click();
     const start=page.getByRole('button',{name:/let.s play/i});
     const box=await start.boundingBox();
     expect(box.height).toBeGreaterThanOrEqual(48);
@@ -61,11 +71,13 @@ test('minimal interface fits small phones, keeps start visible and verification 
   }
   await page.setViewportSize({width:320,height:568});
   await page.goto('/');
+  await page.getByRole('button',{name:/^Play/}).click();
   await page.screenshot({path:'test-results/minimal-mobile-320.png',fullPage:true});
   await page.route('**/api/result',r=>r.fulfill({json:{status:'won',reactionMs:300,code:null,prize:{label:'One free sarbath',terms:'Synthetic'}}}));
   await page.route('https://challenges.cloudflare.com/**',r=>r.fulfill({contentType:'application/javascript',body:'window.turnstile={render:(el,opts)=>{el.dataset.size=opts.size;const box=document.createElement("div");box.style.width=opts.size==="compact"?"150px":"300px";box.style.height=opts.size==="compact"?"140px":"65px";el.append(box);opts.callback("test");return 1},remove:()=>{}}'}));
   await page.evaluate(()=>sessionStorage.setItem('sarbath-play',JSON.stringify({credential:crypto.randomUUID()})));
   await page.reload();
+  await page.getByRole('button',{name:/^Play/}).click();
   await expect(page.getByLabel('Your name')).toBeVisible();
   await expect(page.locator('.verification')).toHaveAttribute('data-size','compact');
   expect(await page.getByLabel('Mobile number').evaluate(el=>getComputedStyle(el).fontSize)).toBe('16px');
