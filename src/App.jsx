@@ -32,9 +32,47 @@ function LaunchScreen({ onDone }) {
   return <div className="launch-screen" role="status" aria-label="Opening Sarbath Club">
     <div className="launch-glow" />
     <img className="launch-logo" src="/logo-backgroundless.webp" alt="Sarbath Club — Purely Refreshing" />
-    <div className="launch-wave launch-wave-gold" />
-    <div className="launch-wave launch-wave-sarbath" />
-    <div className="launch-splashes" aria-hidden="true"><i /><i /><i /><i /></div>
+    <div className="liquid-stage" aria-hidden="true">
+      <div className="wave-wrap wave-wrap-gold">
+        <svg className="wave-svg wave-gold-anim" viewBox="0 0 1200 160" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="goldGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#FFE28A" />
+              <stop offset="35%" stopColor="#FCC845" />
+              <stop offset="100%" stopColor="#E29F15" />
+            </linearGradient>
+          </defs>
+          <path fill="url(#goldGrad)" d="M 0,45 C 150,10 300,75 450,40 C 525,22 575,32 600,45 C 750,10 900,75 1050,40 C 1125,22 1175,32 1200,45 L 1200,160 L 0,160 Z" />
+          <path fill="none" stroke="rgba(255,255,255,0.6)" strokeWidth="2.5" d="M 0,45 C 150,10 300,75 450,40 C 525,22 575,32 600,45 C 750,10 900,75 1050,40 C 1125,22 1175,32 1200,45" />
+        </svg>
+        <svg className="wave-svg wave-gold-anim-2" viewBox="0 0 1200 160" preserveAspectRatio="none">
+          <path fill="#F5BC32" opacity="0.6" d="M 0,55 C 120,75 280,25 420,60 C 510,80 570,65 600,55 C 720,75 880,25 1020,60 C 1110,80 1170,65 1200,55 L 1200,160 L 0,160 Z" />
+        </svg>
+      </div>
+
+      <div className="wave-wrap wave-wrap-sarbath">
+        <svg className="wave-svg wave-sarbath-anim" viewBox="0 0 1200 140" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="sarbathGrad" x1="0%" y1="0%" x2="0%" y2="100%">
+              <stop offset="0%" stopColor="#B8550B" />
+              <stop offset="25%" stopColor="#954103" />
+              <stop offset="80%" stopColor="#6F2800" />
+              <stop offset="100%" stopColor="#4E1A00" />
+            </linearGradient>
+          </defs>
+          <path fill="url(#sarbathGrad)" d="M 0,35 C 140,65 290,10 440,40 C 520,55 570,45 600,35 C 740,65 890,10 1040,40 C 1120,55 1170,45 1200,35 L 1200,140 L 0,140 Z" />
+          <path fill="none" stroke="rgba(255,255,255,0.65)" strokeWidth="2.5" d="M 0,35 C 140,65 290,10 440,40 C 520,55 570,45 600,35 C 740,65 890,10 1040,40 C 1120,55 1170,45 1200,35" />
+        </svg>
+        <svg className="wave-svg wave-sarbath-anim-2" viewBox="0 0 1200 140" preserveAspectRatio="none">
+          <path fill="#7B3200" opacity="0.45" d="M 0,45 C 160,15 310,60 460,30 C 530,15 580,30 600,45 C 760,15 910,60 1060,30 C 1130,15 1180,30 1200,45 L 1200,140 L 0,140 Z" />
+        </svg>
+
+        <div className="bubble bb1" />
+        <div className="bubble bb2" />
+        <div className="bubble bb3" />
+        <div className="bubble bb4" />
+      </div>
+    </div>
   </div>;
 }
 function CustomerExperience() {
