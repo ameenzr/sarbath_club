@@ -43,6 +43,13 @@ test('fixture API drives anonymous play, early tap, replay and winning claim',as
   await page.getByRole('button',{name:/TAP NOW/}).focus();await page.keyboard.press('Space');
   // Should show claim form after winning
   await expect(page.getByText('Claim your',{exact:false})).toBeVisible();
+  await page.getByRole('button',{name:'Play again'}).click();
+  await expect(page.getByRole('button',{name:/let.s play/i})).toBeVisible();
+  status='reserved';
+  await page.getByRole('button',{name:/let.s play/i}).click();
+  await expect(page.getByRole('button',{name:/TAP NOW/})).toBeVisible();
+  await page.getByRole('button',{name:/TAP NOW/}).focus();await page.keyboard.press('Space');
+  await expect(page.getByText('Claim your',{exact:false})).toBeVisible();
   await page.getByLabel('Your name').fill('Synthetic');
   await page.getByLabel('Mobile number').fill('9876543210');
   await page.getByRole('button',{name:/claim reward/i}).click();
