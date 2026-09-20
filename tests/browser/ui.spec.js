@@ -60,7 +60,12 @@ test('fixture API drives anonymous play, early tap, replay and winning claim',as
   await expect(page.getByText('JB-ABCDE')).toBeVisible();
   await page.getByRole('button',{name:'Copy coupon code'}).click();
   await expect(page.getByRole('button',{name:'Coupon code copied'})).toBeVisible();
-  await expect(page.getByRole('link',{name:'Sarbath Club store location'})).toHaveAttribute('href','https://maps.app.goo.gl/wRiGJTGCmUnWQVrq9');
+  await expect(page.getByText('YOUR COUPON',{exact:true})).toBeVisible();
+  await expect(page.getByText('Show this code',{exact:true})).toBeVisible();
+  await expect(page.getByText('Valid for 7 days',{exact:true})).toBeVisible();
+  await expect(page.getByRole('link',{name:/Get directions/})).toHaveAttribute('href','https://maps.app.goo.gl/wRiGJTGCmUnWQVrq9');
+  await expect(page.getByRole('button',{name:'Play again'})).toBeVisible();
+  expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
   await page.screenshot({path:'test-results/win.png',fullPage:true});
 });
 

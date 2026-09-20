@@ -75,7 +75,7 @@ test('desktop and all fixture outcomes stay readable',async({page})=>{
   for(const status of ['lost','expired','too_early','won']){
     await page.route('**/api/result',r=>r.fulfill({json:{status,reactionMs:status==='expired'?null:status==='lost'?500:300,code:status==='won'?'JB-ABCDE':null,expiresAt:Date.now()+86400000,prize:{label:'Demo',terms:'Synthetic'}}}));
     await page.evaluate(()=>sessionStorage.setItem('sarbath-play',JSON.stringify({credential:crypto.randomUUID()})));
-    await page.reload();await page.getByRole('button',{name:/^Play/}).click();await expect(page.getByText(status==='won'?'YOU DID IT!':'THANKS FOR PLAYING')).toBeVisible();
+    await page.reload();await page.getByRole('button',{name:/^Play/}).click();await expect(page.getByText(status==='won'?'YOUR COUPON':'THANKS FOR PLAYING')).toBeVisible();
     await page.unroute('**/api/result');
   }
 });

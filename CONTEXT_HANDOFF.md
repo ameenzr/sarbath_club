@@ -7,9 +7,7 @@ Updated 20 September 2026 after reviewing the owner’s external changes. This i
 - Workspace: `C:\Users\Ameen\projects\sarbath_club`
 - GitHub: https://github.com/ameenzr/sarbath_club
 - Branch: `main`, clean and synchronized with `origin/main`.
-- Current commit: `65b4e5543f362efa2b37b1d62cb60d9b300e2b1f` (`65b4e55`), **Add favicon suite and refine fluid wave launch animation**.
 - Runtime: React/Vite frontend, Cloudflare Pages Functions API, Cloudflare D1, and a separate hourly cleanup Worker.
-- No uncommitted working-tree changes were present during this audit.
 
 ## Product rules
 
@@ -25,6 +23,8 @@ Updated 20 September 2026 after reviewing the owner’s external changes. This i
 ## External changes now present
 
 Latest game-page redesign: the Tap Fast. Sip Free. detail page now follows the owner-supplied dark mobile mockup. It uses a dedicated dark canvas, two-line title, explanatory copy, compact 120–449 ms/unlimited-play row, illustrated free-sarbath reward card, full-width blue Start button, and dark saved-coupon/recovery/result states. The former behavior and game rules are unchanged. The reference image contained the retired “Quick Sip Challenge” label; implementation correctly uses “REACTION GAME” and the current game name instead.
+
+Latest claimed-coupon redesign: after a successful claim, the game introduction is replaced by a focused mobile result. It uses a cream scalloped ticket, a copyable coupon code, counter and seven-day-expiry details, a blue **Get directions** action, and an outlined **Play again** action. It follows the supplied Sarbath Club palette and retains the existing coupon, clipboard, map, and replay behavior.
 
 The owner’s recent commits are already pushed and merged:
 
@@ -64,11 +64,11 @@ The customer home screen is now a game-selection screen rather than the earlier 
 
 ## Reported verification
 
-The current `docs/test-report.md` records:
+The latest local verification after the game and claimed-coupon redesign records:
 
-- `npm run build`: pass; 244.75 kB JS and 23.31 kB CSS before gzip.
+- `npm run build`: pass; 249.11 kB JS and 34.12 kB CSS before gzip.
 - `npm run check`: pass.
-- `npm test`: 13/13 Node tests pass.
+- `npm test`: all six top-level Node test suites pass.
 - `npm run test:e2e`: 6/6 browser tests pass.
 - `npm audit --omit=dev`: no production dependency vulnerabilities.
 - Preview smoke tests: `/`, `/staff`, `/privacy`, `/api/config`, and the WebP logo returned 200; customer play was enabled.
