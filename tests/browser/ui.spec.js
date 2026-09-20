@@ -41,6 +41,8 @@ test('fixture API drives anonymous play, early tap, replay and winning claim',as
   // Early tap
   await page.getByRole('button',{name:/GET READY/}).click();
   await expect(page.getByText('tapped before',{exact:false})).toBeVisible();
+  await expect(page.getByText('Tap within 120–449 ms to win.',{exact:false})).toBeVisible();
+  await expect(page.locator('.intro')).toHaveCount(0);
   // Replay
   await page.getByRole('button',{name:/play again/i}).click();
   status='reserved';
