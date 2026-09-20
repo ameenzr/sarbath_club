@@ -169,18 +169,53 @@ p { color: var(--text-secondary); }
 @keyframes launch-exit { to { opacity: 0; visibility: hidden; transform: scale(1.05); } }
 
 .game-choice {
-  display: flex; align-items: center; gap: var(--space-md); padding: var(--space-md);
-  background: var(--color-primary); border-radius: var(--radius-lg); color: var(--text-inverse);
-  box-shadow: var(--shadow-md); position: relative; overflow: hidden;
+  display: flex; flex-direction: row;
+  background: #142336; border-radius: 16px; color: #ffffff;
+  box-shadow: 0 8px 24px rgba(10, 24, 40, 0.4); overflow: hidden;
+  position: relative; border: 1px solid #1f3653;
 }
-.game-choice-bg { position: absolute; inset: 0; background: linear-gradient(135deg, #1e5faf, #133a6e); z-index: 0; }
-.game-choice-content { position: relative; z-index: 1; flex: 1; }
-.game-choice .kicker { font-size: 10px; font-weight: 800; letter-spacing: 1px; color: rgba(255,255,255,0.7); text-transform: uppercase; margin-bottom: 4px; }
-.game-choice h2 { color: var(--text-inverse); font-size: 24px; margin-bottom: 4px; }
-.game-choice p { color: rgba(255,255,255,0.9); font-size: 13px; margin-bottom: 12px; }
-.game-choice-meta { display: flex; gap: var(--space-md); font-size: 12px; font-weight: 600; color: var(--color-secondary); margin-bottom: var(--space-md); }
-.game-choice-art { position: relative; z-index: 1; width: 80px; height: 100px; display: grid; place-items: center; font-size: 50px; }
-.btn-info { position: absolute; top: var(--space-sm); right: var(--space-sm); z-index: 2; width: 32px; height: 32px; border-radius: var(--radius-full); background: rgba(255,255,255,0.2); color: white; display: grid; place-items: center; font-family: Georgia, serif; font-weight: bold; font-size: 14px; }
+.game-choice-art-block {
+  width: 120px; flex-shrink: 0;
+  background: linear-gradient(160deg, #fbf4df 45%, #d1e4f4 45%, #a6caeb 100%);
+  display: grid; place-items: center; position: relative;
+  overflow: hidden;
+}
+.game-choice-art-block::after {
+  content: ""; position: absolute;
+  top: 50%; left: -20%; width: 140%; height: 60px;
+  background: rgba(255,255,255,0.25); border-radius: 50%;
+  transform: rotate(-12deg) translateY(-50%); pointer-events: none;
+}
+.game-choice-art { font-size: 44px; z-index: 1; filter: drop-shadow(0 4px 8px rgba(0,0,0,0.15)); }
+.game-choice-content {
+  flex: 1; padding: 16px 16px 16px 12px; position: relative; display: flex; flex-direction: column;
+}
+.game-choice-content .kicker {
+  font-size: 9px; font-weight: 800; color: #8fa0b3; letter-spacing: 0.5px; margin-bottom: 4px; text-transform: uppercase;
+}
+.game-choice-content h2 {
+  font-size: 21px; font-family: var(--font-display); font-weight: 900; margin-bottom: 4px; letter-spacing: -0.3px; line-height: 1.1; color: #ffffff;
+}
+.game-choice-content p {
+  font-size: 11px; color: #9bb1cb; line-height: 1.4; margin-bottom: 12px;
+}
+.game-choice-actions {
+  margin-top: auto; display: flex; justify-content: flex-end;
+}
+.btn-play {
+  background: #1e5faf; color: white; border-radius: 10px;
+  padding: 6px 16px; font-size: 14px; font-weight: 700;
+  display: inline-flex; align-items: center; gap: 6px;
+  box-shadow: 0 4px 12px rgba(30, 95, 175, 0.4);
+}
+.btn-play span { font-size: 10px; }
+.btn-info {
+  position: absolute; top: 12px; right: 12px;
+  width: 24px; height: 24px; border-radius: 50%;
+  border: 1px solid rgba(143, 160, 179, 0.3); color: #71b4ff;
+  display: grid; place-items: center; font-family: Georgia, serif; font-size: 11px; font-weight: bold; background: transparent; cursor: pointer;
+}
+.btn-info:hover { background: rgba(255,255,255,0.05); }
 
 .play-field {
   position: fixed; inset: 0; z-index: 500; display: flex; flex-direction: column; align-items: center; justify-content: center;
@@ -235,6 +270,17 @@ p { color: var(--text-secondary); }
 .text-muted { color: var(--text-secondary); }
 .text-sm { font-size: 13px; }
 .text-xs { font-size: 11px; }
+
+/* Dark mode wrapper */
+.games-hub-dark {
+  --bg-default: #0a1522;
+  --bg-surface: #132337;
+  --text-primary: #ffffff;
+  --text-secondary: #9bb1cb;
+  background: var(--bg-default);
+}
+.games-hub-dark .app-header { background: transparent; }
+.games-hub-dark h1 { color: #ffffff; }
 
 /* Dark mode fallback for staff */
 @media (prefers-color-scheme: dark) {

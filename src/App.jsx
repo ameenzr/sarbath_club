@@ -78,27 +78,26 @@ function GamesHub({ onPlay }) {
     return () => window.removeEventListener('keydown', closeOnEscape);
   }, [rulesOpen]);
   return (
-    <Shell>
+    <Shell className="games-hub-dark">
       <main className="app-main">
         <div className="mb-6">
-          <h1 className="mb-2">Win a game.<br/><span style={{color: 'var(--color-primary)'}}>Win a drink.</span></h1>
-          <p>Play our quick-sip challenge to win a free refreshing drink.</p>
+          <h1 className="mb-2">Win a game.<br/><span style={{color: 'var(--color-secondary)'}}>Win a drink.</span></h1>
+          <p className="text-muted" style={{color: '#9bb1cb'}}>Play our quick-sip challenge to win a free refreshing drink.</p>
         </div>
         <div aria-label="Available games">
           <div className="game-choice">
-            <button className="btn-info" onClick={() => setRulesOpen(true)} aria-label="View Tap Fast. Sip Free. rules">i</button>
-            <div className="game-choice-bg"></div>
-            <div className="game-choice-content">
-              <div className="kicker">Reaction Game</div>
-              <h2>Tap Fast.<br/>Sip Free.</h2>
-              <p>Wait for blue, then tap.</p>
-              <div className="game-choice-meta">
-                <span>⚡ 120–449 ms</span>
-                <span>★ Free sarbath</span>
-              </div>
-              <button className="btn btn-secondary w-full" onClick={onPlay}>Play now</button>
+            <div className="game-choice-art-block">
+              <div className="game-choice-art" aria-hidden="true">🧋</div>
             </div>
-            <div className="game-choice-art" aria-hidden="true">🥤</div>
+            <div className="game-choice-content">
+              <button className="btn-info" onClick={() => setRulesOpen(true)} aria-label="View Tap Fast. Sip Free. rules">i</button>
+              <div className="kicker">TAP FAST. SIP FREE.</div>
+              <h2>Tap fast. Sip free.</h2>
+              <p>Wait for blue, then tap quickly. 120-449 ms wins.</p>
+              <div className="game-choice-actions">
+                <button className="btn-play" onClick={onPlay}>Play <span aria-hidden="true">▶</span></button>
+              </div>
+            </div>
           </div>
         </div>
       </main>
