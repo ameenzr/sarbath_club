@@ -21,9 +21,9 @@ function Turnstile({ onToken, generation }) {
   }, [onToken, generation]);
   return <div className="verification" ref={target} />;
 }
-function Brand({ staff = false }) { return <a className="brand" href={staff ? '/staff' : '/'}><img src="/logo-backgroundless.webp" width="40" height="40" alt="" /><span>{staff ? 'Staff counter' : 'Sarbath Club'}<small>{staff ? 'ADMIN' : 'PURELY REFRESHING'}</small></span></a>; }
-function Shell({ children, staff = false, className = '' }) {
-  return <div className={`site ${className}`.trim()}><header><Brand staff={staff} />{staff && <a className="nav-link" href="/">Let’s play!🧋</a>}</header>{children}<footer><a href="/privacy">Privacy</a></footer></div>;
+function Brand({ staff = false }) { return <a className="brand" href="/" title={staff ? 'Go to game page' : undefined}><img src="/logo-backgroundless.webp" width="40" height="40" alt="" /><span>{staff ? 'Staff counter' : 'Sarbath Club'}<small>{staff ? 'ADMIN' : 'PURELY REFRESHING'}</small></span></a>; }
+function Shell({ children, staff = false, className = '', headerAction = null }) {
+  return <div className={`site ${className}`.trim()}><header><Brand staff={staff} />{headerAction}</header>{children}<footer><a href="/privacy">Privacy</a></footer></div>;
 }
 function LaunchScreen({ onDone }) {
   useEffect(() => {
@@ -272,9 +272,11 @@ function Staff() {
   async function search() { const r = await api('staff/search', { query }); setRows(r.results); setView('search'); if (!r.results.length) setMessage('No matching coupon found.'); }
   async function redeem(row) { const r = await api('staff/redeem', { id: row.id }); setRows(current => current.map(item => item.id === row.id ? { ...item, redeemed: 1, redeemed_at: r.redeemedAt || Date.now() } : item)); setMessage(r.alreadyRedeemed ? 'Already redeemed. Do not hand over another prize.' : 'Redemption confirmed. Hand over the prize now.'); }
   async function signIn(payload) { await api('staff/login', payload); setPassword(''); setSigned(true); await loadCoupons('recent'); }
+  async function signOut() { await run(async () => { await api('staff/logout', {}); setRows([]); setView('recent'); setSigned(false); }); }
   const localDevelopment = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
   const listTitle = view === 'redeemed' ? 'Redeemed coupons' : view === 'search' ? 'Search results' : 'Recent wins';
-  return <Shell staff><main className="staff-main"><p className="staff-intro">Confirm redemption before handing over the prize.</p><section className={`staff-card${signed ? ' staff-dashboard' : ''}`}>{!signed ? <form onSubmit={e => { e.preventDefault(); run(() => signIn({ password })); }}><h2>Staff sign in</h2>{localDevelopment && <><button className="local-admin-login" type="button" disabled={busy} onClick={() => run(() => signIn({ development: true }))}>Use local admin</button><p className="local-admin-note">Development only · available on this computer</p><div className="login-divider"><span>or use a password</span></div></>}<input className="staff-password-input" id="password" aria-label="Staff password" placeholder="Enter password" type="password" required autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} /><button className="primary" disabled={busy}>Sign in</button></form> : <>
+  const signOutAction = signed ? <button className="nav-link staff-signout" type="button" disabled={busy} onClick={signOut}>Sign out</button> : null;
+  return <Shell staff headerAction={signOutAction}><main className="staff-main"><section className={`staff-card${signed ? ' staff-dashboard' : ''}`}>{!signed ? <form onSubmit={e => { e.preventDefault(); run(() => signIn({ password })); }}><h2>Staff sign in</h2>{localDevelopment && <><button className="local-admin-login" type="button" disabled={busy} onClick={() => run(() => signIn({ development: true }))}>Use local admin</button><p className="local-admin-note">Development only · available on this computer</p><div className="login-divider"><span>or use a password</span></div></>}<input className="staff-password-input" id="password" aria-label="Staff password" placeholder="Enter password" type="password" required autoComplete="current-password" value={password} onChange={e => setPassword(e.target.value)} /><button className="primary" disabled={busy}>Sign in</button></form> : <>
     <form className="staff-search" onSubmit={e => { e.preventDefault(); run(search); }}><label htmlFor="search">Find a coupon</label><div><input id="search" value={query} onChange={e => setQuery(e.target.value)} required maxLength={40} placeholder="Code or mobile number" /><button disabled={busy}>Find</button></div></form>
     <div className="staff-toolbar" role="tablist" aria-label="Coupon views"><button role="tab" aria-selected={view === 'recent'} className={view === 'recent' ? 'active' : ''} disabled={busy} onClick={() => run(() => loadCoupons('recent'))}>Recent wins</button><button role="tab" aria-selected={view === 'redeemed'} className={view === 'redeemed' ? 'active' : ''} disabled={busy} onClick={() => run(() => loadCoupons('redeemed'))}>Redeemed</button></div>
     <div className="staff-section-head"><h2>{listTitle}</h2><span>{rows.length}</span></div>
@@ -285,7 +287,6 @@ function Staff() {
       <p className="staff-prize"><span>Prize</span><strong>{row.prize_label}</strong></p>
       <div className="staff-card-foot"><small><span>Won {new Date(row.created_at).toLocaleString('en-IN')}</span><span>Expires {new Date(row.expires_at).toLocaleString('en-IN')}</span><strong>{expired ? 'Expired' : `${daysLeft} ${daysLeft === 1 ? 'day' : 'days'} left`}</strong></small>{!!row.redeemed && <p className="redeemed-date">Redeemed {new Date(row.redeemed_at).toLocaleString('en-IN')}</p>}{!row.redeemed && <button className="redeem-button" disabled={busy || expired} onClick={() => run(() => redeem(row))}>{expired ? 'Expired' : 'Redeem'}</button>}</div>
     </article>; })}</div>
-    <button className="text-button staff-signout" disabled={busy} onClick={() => run(async () => { await api('staff/logout', {}); setRows([]); setView('recent'); setSigned(false); })}>Sign out</button>
   </>}{message && <p role="status" className="notice">{message}</p>}</section></main></Shell>;
 }
 function Privacy() {
