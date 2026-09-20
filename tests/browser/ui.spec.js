@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test';
 test('customer preview, mobile layout, privacy and staff login', async ({page})=>{
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.goto('/');
-  await expect(page.getByRole('heading',{name:/Pick a game/})).toBeVisible();
+  await expect(page.getByRole('heading',{name:/Win a game\. Win a drink\./})).toBeVisible();
   await page.getByRole('button',{name:/^Play/}).click();
   await expect(page.locator('h1')).toHaveText('Tap fast. Sip free.');
   // New flow: no name/phone fields on welcome screen
