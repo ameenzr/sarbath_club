@@ -270,7 +270,7 @@ test('API anonymous flash, claim, result recovery, staff authentication and orig
   const originalFetch = globalThis.fetch;
   globalThis.fetch = async (_url, options) => Response.json({success: JSON.parse(options.body).response === 'valid-test'});
   try {
-    const env = {DB:db, TURNSTILE_SECRET:'1x0000000000000000000000000000000AA', STAFF_PASSWORD:crypto.randomUUID(), GAME_ENABLED:'false'};
+    const env = {DB:db, TURNSTILE_SECRET:'1x0000000000000000000000000000000AA', STAFF_PASSWORD:crypto.randomUUID(), GAME_ENABLED:'false', APP_ENV:'local'};
     const credential = crypto.randomUUID(); let sampling = ''; let staffCookie = '';
     const request = async (path, input, options = {}) => {
       const headers = {...(input === undefined ? {} : {'Content-Type':'application/json'}), ...(options.bearer ? {Authorization:`Bearer ${options.bearer}`} : {}), ...(options.cookie ? {Cookie:options.cookie} : {}), ...(options.origin ? {Origin:options.origin} : {})};
@@ -280,6 +280,11 @@ test('API anonymous flash, claim, result recovery, staff authentication and orig
     // Staff auth check
     assert.equal((await request('staff/search', {query:'9876543210'})).response.status, 401);
     assert.equal((await request('staff/login', {password:env.STAFF_PASSWORD}, {origin:'https://evil.example'})).response.status, 403);
+    const developmentLogin = await request('staff/login', {development:true}, {origin:'http://localhost:5174'});
+    assert.equal(developmentLogin.response.status, 200);
+    const developmentCookie = developmentLogin.response.headers.get('Set-Cookie').split(';')[0];
+    assert.equal((await request('staff/coupons', {view:'recent'}, {cookie:developmentCookie, origin:'http://localhost:5174'})).response.status, 200);
+    assert.equal((await request('staff/login', {development:true}, {remote:true, origin:'https://shop.example'})).response.status, 401);
     // Connection sampling
     for (let i = 0; i < 3; i++) {
       const c = await request('ping', {}, {cookie:sampling}); sampling = c.response.headers.get('Set-Cookie').split(';')[0];

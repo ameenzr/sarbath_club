@@ -12,7 +12,7 @@ npm run db:local
 npm run preview
 ```
 
-Open [the local preview](http://127.0.0.1:8788). Keep that terminal running. The API and frontend share this address. Local-only `.dev.vars` contains official public Turnstile test configuration and a demo staff password; replace the demo password for your own local testing. The ignored files must never become remote secret configuration. If starting from a fresh copy, copy `.dev.vars.example` to `.dev.vars` and `.env.example` to `.env.local`, then set your local staff password.
+Open [the local preview](http://127.0.0.1:8788). Keep that terminal running. The API and frontend share this address. On localhost, `/staff` includes a **Use local admin** button for development; the API accepts it only for a loopback hostname with `APP_ENV=local`. Local-only `.dev.vars` contains official public Turnstile test configuration and may also contain a staff password for testing the normal sign-in flow. The ignored files must never become remote secret configuration. If starting from a fresh copy, copy `.dev.vars.example` to `.dev.vars` and `.env.example` to `.env.local`.
 
 For frontend hot reload, run `npm run dev:api` in one terminal and `npm run dev` in another. Open `http://127.0.0.1:5173`. Run a build first so `dist` exists. The Vite server proxies API requests to 8788. `?diagnostic` on the Vite URL displays local timing comparisons for development only.
 

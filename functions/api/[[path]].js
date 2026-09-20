@@ -1,6 +1,7 @@
 import { ApiError, digest, phoneNumber, customerName, primary, loadSession, reserve, finalize, claim, result, redeem, incrementLimit, cleanup } from '../../server/core.js';
 
 const TEST_SECRET = '1x0000000000000000000000000000000AA';
+const LOCAL_STAFF_VERSION = 'local-development-admin';
 const json = (body, status = 200, headers = {}) => Response.json(body, { status, headers: { 'Cache-Control': 'no-store', 'X-Content-Type-Options': 'nosniff', ...headers } });
 const cookies = request => Object.fromEntries((request.headers.get('Cookie') || '').split(';').map(x => x.trim().split('=')).filter(x => x.length === 2));
 const cookie = (request, name, value, age) => `${name}=${value}; Path=/api; HttpOnly; SameSite=Strict; Max-Age=${age}${new URL(request.url).protocol === 'https:' ? '; Secure' : ''}`;
@@ -20,8 +21,9 @@ async function bearer(request) {
 }
 async function staff(request, env, db) {
   const token = cookies(request).staff;
-  if (!token || !env.STAFF_PASSWORD) throw new ApiError('unauthorized', 401);
-  const row = await db.prepare('SELECT * FROM staff_sessions WHERE token=? AND expires_at>? AND password_version=?').bind(await digest(token), Date.now(), await digest(env.STAFF_PASSWORD)).first();
+  const passwordVersion = env.STAFF_PASSWORD || (local(request) && env.APP_ENV === 'local' ? LOCAL_STAFF_VERSION : '');
+  if (!token || !passwordVersion) throw new ApiError('unauthorized', 401);
+  const row = await db.prepare('SELECT * FROM staff_sessions WHERE token=? AND expires_at>? AND password_version=?').bind(await digest(token), Date.now(), await digest(passwordVersion)).first();
   if (!row) throw new ApiError('unauthorized', 401);
 }
 async function verify(request, env, value) {
@@ -40,8 +42,11 @@ export async function onRequest({ request, env }) {
     if (request.method === 'POST') {
       const origin = request.headers.get('Origin');
       const url = new URL(request.url);
-      // Vite development proxy forwards the browser origin on port 5173.
-      const devOrigin = local(request) && ['http://127.0.0.1:5173', 'http://localhost:5173'].includes(origin);
+      // Vite may select another port when 5173 is already occupied.
+      let devOrigin = false;
+      if (local(request) && origin) {
+        try { devOrigin = ['localhost', '127.0.0.1', '[::1]'].includes(new URL(origin).hostname); } catch { devOrigin = false; }
+      }
       if ((!origin && !local(request)) || (origin && origin !== url.origin && !devOrigin)) throw new ApiError('forbidden', 403);
     }
     if (!env.DB) throw new ApiError('configuration_required', 503);
@@ -102,10 +107,14 @@ export async function onRequest({ request, env }) {
     }
     if (path === 'staff/login') {
       await incrementLimit(db, `login:${ipKey}`, 10);
-      if (!env.STAFF_PASSWORD || (!local(request) && env.STAFF_PASSWORD.startsWith('local-demo'))) throw new ApiError('configuration_required', 503);
-      if (typeof input.password !== 'string' || input.password.length > 200 || await digest(input.password) !== await digest(env.STAFF_PASSWORD)) throw new ApiError('unauthorized', 401);
+      const developmentLogin = input.development === true;
+      const developmentAllowed = local(request) && env.APP_ENV === 'local';
+      if (developmentLogin && !developmentAllowed) throw new ApiError('unauthorized', 401);
+      if (!developmentLogin && (!env.STAFF_PASSWORD || (!local(request) && env.STAFF_PASSWORD.startsWith('local-demo')))) throw new ApiError('configuration_required', 503);
+      if (!developmentLogin && (typeof input.password !== 'string' || input.password.length > 200 || await digest(input.password) !== await digest(env.STAFF_PASSWORD))) throw new ApiError('unauthorized', 401);
+      const passwordVersion = env.STAFF_PASSWORD || LOCAL_STAFF_VERSION;
       const raw = crypto.randomUUID();
-      await db.prepare('INSERT INTO staff_sessions(token,expires_at,password_version) VALUES(?,?,?)').bind(await digest(raw), received + 8 * 3600000, await digest(env.STAFF_PASSWORD)).run();
+      await db.prepare('INSERT INTO staff_sessions(token,expires_at,password_version) VALUES(?,?,?)').bind(await digest(raw), received + 8 * 3600000, await digest(passwordVersion)).run();
       return json({ ok: true }, 200, { 'Set-Cookie': cookie(request, 'staff', raw, 8 * 3600) });
     }
     if (path.startsWith('staff/')) {

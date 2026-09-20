@@ -16,6 +16,9 @@ test('customer preview, mobile layout, privacy and staff login', async ({page})=
   await page.screenshot({path:'test-results/customer-dark.png',fullPage:true});
   await page.goto('/privacy'); await expect(page.getByRole('heading',{name:'What we collect'})).toBeVisible();
   await page.goto('/staff'); await expect(page.getByLabel('Staff password')).toBeVisible();
+  await expect(page.getByRole('button',{name:'Use local admin'})).toBeVisible();
+  await page.getByRole('button',{name:'Use local admin'}).click();
+  await expect(page.getByRole('heading',{name:'Recent wins'})).toBeVisible();
   await page.screenshot({path:'test-results/staff.png',fullPage:true});
 });
 test('fixture API drives anonymous play, early tap, replay and winning claim',async({page})=>{

@@ -60,6 +60,8 @@ The customer home screen is now a game-selection screen rather than the earlier 
 - Turnstile public site key: `0x4AAAAAAE7jL3Poyh4vtvKG`. Widget hostname is `sarbath-club-preview.pages.dev`.
 - Private `TURNSTILE_SECRET` and `STAFF_PASSWORD` are configured in Pages. Never read, print, put in commands, or commit their values.
 
+Local development: the staff sign-in screen shows **Use local admin** only on loopback hostnames. The API accepts that shortcut only when the request hostname is local and `APP_ENV=local`; preview and production hosts reject crafted development-login requests. Vite loopback origins remain valid when the dev server selects a port other than 5173.
+
 `scripts/deploy-preview.js` temporarily stages `wrangler.preview.toml` as root config because Pages deployment uses root `wrangler.toml`, then restores the local config. It deploys to the named preview project. Do not change its project name unless a new Pages project has actually been created.
 
 ## Reported verification
