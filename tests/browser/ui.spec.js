@@ -68,6 +68,8 @@ test('fixture API drives anonymous play, early tap, replay and winning claim',as
   await expect(page.getByText('YOUR COUPON',{exact:true})).toBeVisible();
   await expect(page.getByText('Show this code',{exact:true})).toBeVisible();
   await expect(page.getByText('Valid for 7 days',{exact:true})).toBeVisible();
+  await expect(page.getByText(/lose the coupon code or share with strangers/i)).toBeVisible();
+  await expect(page.getByRole('button',{name:/Share coupon code/i})).toBeVisible();
   await expect(page.getByRole('link',{name:/Get directions/})).toHaveAttribute('href','https://maps.app.goo.gl/wRiGJTGCmUnWQVrq9');
   await expect(page.getByRole('button',{name:'Play again'})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
