@@ -91,7 +91,34 @@ function GamesHub({ onPlay }) {
     window.addEventListener('keydown', closeOnEscape);
     return () => window.removeEventListener('keydown', closeOnEscape);
   }, [rulesOpen]);
-  return <Shell><main className="games-page"><section className="games-intro"><h1>Win a game.<br /><span>Win a drink.</span></h1></section><section className="game-list" aria-label="Available games"><article className="game-choice"><div className="game-choice-icon" aria-hidden="true">⚡</div><button className="game-details-button" onClick={() => setRulesOpen(true)} aria-label="View Tap Fast. Sip Free. rules" title="Game rules">i</button><div className="game-choice-copy"><div className="game-choice-title"><h2>Tap Fast. Sip Free.</h2><p>Wait for blue. Tap to win.</p></div><div className="game-choice-meta"><span><b aria-hidden="true">⚡</b>120–449 ms</span><span><b aria-hidden="true">★</b>Free sarbath</span></div></div><button className="game-choice-button" onClick={onPlay}>Play <span aria-hidden="true">▶</span></button></article></section></main>{rulesOpen && <div className="rules-backdrop" onPointerDown={event => { if (event.target === event.currentTarget) setRulesOpen(false); }}><section className="rules-dialog" role="dialog" aria-modal="true" aria-labelledby="rules-title"><button className="rules-close" onClick={() => setRulesOpen(false)} aria-label="Close rules" autoFocus>×</button><span className="eyebrow">TAP FAST. SIP FREE.</span><h2 id="rules-title">How to play</h2><ol><li>Tap <strong>Play</strong>, then wait for the screen to turn blue.</li><li>Tap anywhere as quickly as you can. A reaction from <strong>120–449 ms</strong> wins.</li><li>If you win, enter your name and Indian mobile number to claim your coupon.</li><li>Each phone number may hold one unredeemed coupon at a time.</li><li>After staff redeem it, the same number can claim another win. Unredeemed coupons expire after seven days.</li></ol><button className="rules-done" onClick={() => setRulesOpen(false)}>Got it</button></section></div>}</Shell>;
+  return <Shell><main className="games-page"><section className="games-intro"><h1>Win a game.<br /><span>Win a drink.</span></h1></section><section className="game-list" aria-label="Available games">
+      <article className="game-choice">
+        <button className="game-details-button" onClick={() => setRulesOpen(true)} aria-label="View Tap Fast. Sip Free. rules" title="Game rules">i</button>
+        <div className="game-choice-copy">
+          <span className="game-choice-kicker">REACTION GAME</span>
+          <div className="game-choice-title">
+            <h2>Tap Fast.<br />Sip Free.</h2>
+            <p>Wait for blue, then tap at the right moment.</p>
+          </div>
+          <div className="game-choice-meta">
+            <span><b aria-hidden="true">⚡</b>120–449 ms</span>
+            <span><b aria-hidden="true">★</b>Free sarbath</span>
+          </div>
+          <button className="game-choice-button" onClick={onPlay}>Play now <span aria-hidden="true">→</span></button>
+        </div>
+        <div className="game-choice-visual" aria-hidden="true">
+          <svg viewBox="0 0 120 144">
+            <path className="speed-line one" d="M18 34h26M10 52h23M20 70h20" />
+            <path className="speed-line two" d="M83 21h20M90 39h17" />
+            <path className="cup-lid" d="M44 42h48M51 33h34" />
+            <path className="cup-body" d="M48 42h40l-5 73H53l-5-73Z" />
+            <path className="straw" d="M72 33l8-22" />
+            <path className="drink-wave" d="M52 68c9-7 20 7 32 0M53 84c8-7 20 7 30 0" />
+            <path className="bolt" d="m35 46-10 19h10l-7 20 19-26H36l8-13Z" />
+          </svg>
+        </div>
+      </article>
+    </section></main>{rulesOpen && <div className="rules-backdrop" onPointerDown={event => { if (event.target === event.currentTarget) setRulesOpen(false); }}><section className="rules-dialog" role="dialog" aria-modal="true" aria-labelledby="rules-title"><button className="rules-close" onClick={() => setRulesOpen(false)} aria-label="Close rules" autoFocus>×</button><span className="eyebrow">TAP FAST. SIP FREE.</span><h2 id="rules-title">How to play</h2><ol><li>Tap <strong>Play</strong>, then wait for the screen to turn blue.</li><li>Tap anywhere as quickly as you can. A reaction from <strong>120–449 ms</strong> wins.</li><li>If you win, enter your name and Indian mobile number to claim your coupon.</li><li>Each phone number may hold one unredeemed coupon at a time.</li><li>After staff redeem it, the same number can claim another win. Unredeemed coupons expire after seven days.</li></ol><button className="rules-done" onClick={() => setRulesOpen(false)}>Got it</button></section></div>}</Shell>;
 }
 const readStored = () => { try { return JSON.parse(sessionStorage.getItem('sarbath-play')); } catch { return null; } };
 const readCoupon = () => { try { return JSON.parse(sessionStorage.getItem('sarbath-coupon')); } catch { return null; } };

@@ -33,6 +33,20 @@ The owner’s recent commits are already pushed and merged:
 - `a1cf288`: redesigns the staff counter with filters, status badges and a streamlined redemption view.
 - `2f0796b`: turns the winning coupon into a branded ticket with code copy feedback and a store-location link.
 - `65b4e55`: adds favicon/Apple touch-icon assets and refines the mobile liquid-wave launch animation.
+- `bc528d1`: refreshed project context after external release changes.
+- `b0d7d60`: renamed game to "Tap Fast. Sip Free." (formerly Quick Sip Challenge).
+- `b82d8bd`: updated game hub headline to "Win a game. Win a drink."
+- `c8af715`: redesigned game page from mobile reference with dark aesthetic and compact stats row.
+- `9bd2b47`: redesigned claimed coupon screen with Google Maps "Get directions" and "Play again" actions.
+- `eb282e1`: added local development admin login ("Use local admin" button) on loopback hostnames.
+- `756e5f6`: styled "< All games" as an integrated back button.
+- `cebc4c4` & `9331b27`: compacted game selection card for mobile viewports.
+- `950870f`: kept redeemed coupon visible in staff counter until refresh.
+- `a207104`: added frontend developer signature to footer.
+- `92a4ff4`: simplified game status screens and refined failure messages.
+- `3ca9c13`: refined coupon action buttons with circular icon badges.
+- `3cc6230`: compacted game welcome screen stats and prize strip.
+- Working tree: active refinement in `src/App.jsx` adding stylized cup illustration and reaction kicker to the game selection card.
 
 The customer home screen is now a game-selection screen rather than the earlier single-card welcome view. It has an information dialog for **Tap Fast. Sip Free.**, animated decorative waves and a mobile-first layout. The app includes a copy-code fallback for browsers without `navigator.clipboard`.
 
@@ -70,8 +84,8 @@ The latest local verification after the game and claimed-coupon redesign records
 
 - `npm run build`: pass; 249.11 kB JS and 34.12 kB CSS before gzip.
 - `npm run check`: pass.
-- `npm test`: all six top-level Node test suites pass.
-- `npm run test:e2e`: 6/6 browser tests pass.
+- `npm test`: all 13 Node unit/integration tests pass.
+- `npm run test:e2e`: 7/7 browser tests pass (including staff redeemed coupon visibility persistence).
 - `npm audit --omit=dev`: no production dependency vulnerabilities.
 - Preview smoke tests: `/`, `/staff`, `/privacy`, `/api/config`, and the WebP logo returned 200; customer play was enabled.
 
