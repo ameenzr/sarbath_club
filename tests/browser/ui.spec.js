@@ -4,7 +4,7 @@ test('customer preview, mobile layout, privacy and staff login', async ({page})=
   await page.goto('/');
   await expect(page.getByRole('heading',{name:/Pick a game/})).toBeVisible();
   await page.getByRole('button',{name:/^Play/}).click();
-  await expect(page.getByRole('heading',{name:/Quick sip challenge/})).toBeVisible();
+  await expect(page.locator('h1')).toHaveText('Tap fast. Sip free.');
   // New flow: no name/phone fields on welcome screen
   await expect(page.getByRole('button',{name:/let.s play/i})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);

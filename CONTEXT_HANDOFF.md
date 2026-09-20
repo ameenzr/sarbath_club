@@ -13,7 +13,7 @@ Updated 20 September 2026 after reviewing the owner’s external changes. This i
 
 ## Product rules
 
-1. Customers select the Quick Sip game and play anonymously.
+1. Customers select **Tap Fast. Sip Free.** and play anonymously.
 2. A server-estimated 120–449 ms reaction wins. Under 120 ms, taps before the blue screen, 450 ms or slower, and expiry do not win.
 3. Failed plays can be replayed immediately, with normal API abuse limits still applied.
 4. Only a winning play presents name/mobile fields and Turnstile verification to claim a coupon.
@@ -32,7 +32,7 @@ The owner’s recent commits are already pushed and merged:
 - `2f0796b`: turns the winning coupon into a branded ticket with code copy feedback and a store-location link.
 - `65b4e55`: adds favicon/Apple touch-icon assets and refines the mobile liquid-wave launch animation.
 
-The customer home screen is now a game-selection screen rather than the earlier single-card welcome view. It has an information dialog for Quick Sip rules, animated decorative waves and a mobile-first layout. The app includes a copy-code fallback for browsers without `navigator.clipboard`.
+The customer home screen is now a game-selection screen rather than the earlier single-card welcome view. It has an information dialog for **Tap Fast. Sip Free.**, animated decorative waves and a mobile-first layout. The app includes a copy-code fallback for browsers without `navigator.clipboard`.
 
 ## Key files
 
