@@ -1,6 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, sampleConnection } from './api.js';
 
+// Developed by AMEEN. Email: ameennazerpk7@gmail.com
+
 function Turnstile({ onToken, generation }) {
   const target = useRef(null);
   useEffect(() => {
