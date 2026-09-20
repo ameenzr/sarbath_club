@@ -1,82 +1,97 @@
 # Sarbath Club — context handoff
 
-Updated 20 September 2026. Project summary, not a chat export. No private secrets.
+Updated 20 September 2026 after reviewing the owner’s external changes. This is a project handoff, not a chat export. It contains no private secret values.
 
-## Latest external changes & status
+## Current repository state
 
-The owner pushed 4 new commits onto `main` (ahead of `origin/main` by 4 commits):
-1. `a30dc61` - **Refine game and staff flows for live release**:
-   - Migration `0007_release_redeemed_coupons.sql`: Redeeming a coupon releases the phone lock so the customer can win and claim again immediately.
-   - Core & API: `redeem()` in `server/core.js` now deletes the phone entry in `coupon_locks` atomically during coupon redemption.
-   - Remote migrations 0001–0007 applied to preview D1 (`sarbath-club-preview-db`).
-   - WebP logo asset: Added `public/logo-backgroundless.webp` (transparent 512px, 216 KB) for fast mobile rendering.
-   - Connection spike tolerance: Up to 9 ping samples collected in `src/api.js` to find 3 stable samples within median <= 1000 ms, spread <= 150 ms.
-   - Full test coverage expanded: 13/13 Node unit/integration tests and 6/6 browser tests passing.
-   - Preview enabled with `GAME_ENABLED=true` on https://sarbath-club-preview.pages.dev/ for live owner testing.
-2. `1c8830a` - **Add replay action to claim dialog**: Allows players who won to replay directly from the claim dialog.
-3. `a1cf288` - **Redesign staff coupon dashboard**: Enhanced counter interface with search, quick filters, clear status badges, and streamlined redemption.
-4. `2f0796b` - **Redesign winning coupon as visual ticket**: Branded ticket card layout with coupon code, barcode/ticket aesthetics, copy-to-clipboard button, and store location navigation link.
-
-## Launch Animation Status
-- Refined mobile-first launch animation in `src/App.jsx` and `src/style.css`.
-- Realistic dual-layer SVG fluid waves (Gold `#FCC845` back layer, Sarbath `#954103` front layer) with smooth counter-sliding animations and specular crest highlights.
-- Gentle effervescent bubbles rising inside the liquid layer.
-- Splashes and droplets removed per user preference for a clean, elegant aesthetic.
-- Zero full-screen color bleeding or filter distortion; fully optimized for mobile screens.
-- All 13 unit tests and 6 browser e2e tests passing cleanly.
-
-Working tree is clean; build, type checks, and all 13 unit tests pass.
-
-## Workspace and repository
-
-- Windows PowerShell: `C:\Users\Ameen\projects\sarbath_club`
+- Workspace: `C:\Users\Ameen\projects\sarbath_club`
 - GitHub: https://github.com/ameenzr/sarbath_club
-- Branch: `main` (ahead of `origin/main` by 4 commits: `a30dc61`, `1c8830a`, `a1cf288`, `2f0796b`).
-- React/Vite frontend, Cloudflare Pages Functions API, D1 SQLite database, and separate hourly cleanup Worker.
-- Key files:
-  - `src/App.jsx`: Complete mobile-first UI with anonymous play, visual ticket coupon, staff dashboard, and privacy policy.
-  - `src/api.js`: API client with connection sample retry logic and error handling.
-  - `server/core.js`: Game timing, anonymous `reserve`, `finalize`, verified `claim`, `redeem` with lock release, cleanup, rate limits.
-  - `functions/api/[[path]].js`: Cloudflare Pages Functions API handlers.
-  - `migrations/`: 0001–0007 migrations (includes 0005 play-then-claim, 0006 issuance terms, 0007 lock release upon redemption).
-  - `worker/cleanup.js`: Hourly data retention cleanup worker (`sarbath-club-preview-cleanup`).
-- Branding: Blue `#1E5FAF`, Cream `#F4E7D3`, Brown `#8B4A1F`, Gold `#E6B85C`. Logo: `public/logo-backgroundless.webp`.
+- Branch: `main`, clean and synchronized with `origin/main`.
+- Current commit: `65b4e5543f362efa2b37b1d62cb60d9b300e2b1f` (`65b4e55`), **Add favicon suite and refine fluid wave launch animation**.
+- Runtime: React/Vite frontend, Cloudflare Pages Functions API, Cloudflare D1, and a separate hourly cleanup Worker.
+- No uncommitted working-tree changes were present during this audit.
 
-## Confirmed game & reward rules
+## Product rules
 
-1. **Anonymous play**: Anyone can tap "LET'S PLAY" immediately without entering personal details or completing captcha.
-2. **Reaction criteria**: 120–449 ms reaction earns a prize. Below 120 ms, tapping before flash, 450 ms or slower, and expiry do not win.
-3. **Unlimited retries**: Customers can replay immediately as many times as they want.
-4. **Verified claim**: Only upon winning, the player enters name and mobile number, completes Turnstile verification, and claims the coupon.
-5. **Reward**: One free **sarbath**.
-6. **Coupon validity**: Exactly 7 days (604,800,000 ms) from issuance timestamp.
-7. **One active coupon per phone**: A phone number cannot claim another coupon while holding an active, unredeemed coupon (`active_coupon` 409).
-8. **Redemption releases lock**: When staff marks a coupon as redeemed, the phone lock is released immediately (migration 0007), allowing the customer to win and claim again.
-9. **Data retention**: Customer details are retained for 30 days from issuance, cleaned automatically by the hourly retention worker.
+1. Customers select the Quick Sip game and play anonymously.
+2. A server-estimated 120–449 ms reaction wins. Under 120 ms, taps before the blue screen, 450 ms or slower, and expiry do not win.
+3. Failed plays can be replayed immediately, with normal API abuse limits still applied.
+4. Only a winning play presents name/mobile fields and Turnstile verification to claim a coupon.
+5. Prize: one free sarbath.
+6. Each coupon expires exactly seven days after issuance.
+7. A phone can hold one unredeemed coupon. When staff redeems it, its phone lock is removed immediately, allowing that number to win and claim again. Unredeemed coupons continue blocking a claim until expiry.
+8. Customer identity and coupon records are retained for 30 days from issuance. The scheduled Worker performs cleanup. There is no customer deletion-request UI.
 
-## Cloudflare infrastructure
+## External changes now present
 
-- Account ID: `2bbb5d7a6d1b537e5e61c8138c5275a6`
-- Pages project: `sarbath-club-preview` (https://sarbath-club-preview.pages.dev/)
-- Preview D1: `sarbath-club-preview-db` (`cc5eaccb-b5eb-42c6-973b-a16b2cf5fdce`, APAC)
-- Deployed migrations: 0001–0007
-- Preview cleanup worker: `sarbath-club-preview-cleanup` (hourly cron `0 * * * *`)
-- Turnstile: Public site key `0x4AAAAAAE7jL3Poyh4vtvKG` (managed, hostname `sarbath-club-preview.pages.dev`)
-- Preview secrets: `TURNSTILE_SECRET` and `STAFF_PASSWORD` configured securely in Cloudflare Pages.
+The owner’s recent commits are already pushed and merged:
 
-## Verification commands
+- `a30dc61`: release-flow changes. Adds migration `0007_release_redeemed_coupons.sql`, which removes locks for redeemed coupons. `redeem()` updates coupon state and lock deletion together. Adds a transparent 512 px WebP logo and expands verification.
+- `1c8830a`: adds replay from the claim view.
+- `a1cf288`: redesigns the staff counter with filters, status badges and a streamlined redemption view.
+- `2f0796b`: turns the winning coupon into a branded ticket with code copy feedback and a store-location link.
+- `65b4e55`: adds favicon/Apple touch-icon assets and refines the mobile liquid-wave launch animation.
+
+The customer home screen is now a game-selection screen rather than the earlier single-card welcome view. It has an information dialog for Quick Sip rules, animated decorative waves and a mobile-first layout. The app includes a copy-code fallback for browsers without `navigator.clipboard`.
+
+## Key files
+
+- `src/App.jsx`: customer game selection/play/claim/ticket screens, staff UI, privacy view, launch animation.
+- `src/style.css`: responsive mobile layout, game hub, ticket, staff dashboard, rules dialog and reduced-motion styling.
+- `src/api.js`: API client and up-to-nine-sample connection stability check.
+- `server/core.js`: anonymous reserve/finalize, coupon claim, redemption with lock release, cleanup and rate limits.
+- `functions/api/[[path]].js`: Pages API routes.
+- `migrations/0001–0007`: schema history; `0007` releases redeemed coupon locks.
+- `worker/cleanup.js`: hourly retention cleanup.
+- `public/logo-backgroundless.webp`: transparent logo for the application.
+- `public/favicon.ico`, `favicon-16x16.png`, `favicon-32x32.png`, `favicon.png`, `apple-touch-icon.png`: current icon suite.
+- `docs/acceptance.md`: physical acceptance walkthrough.
+
+## Cloudflare preview
+
+- Pages project: `sarbath-club-preview`
+- Stable URL: https://sarbath-club-preview.pages.dev/
+- Preview D1: `sarbath-club-preview-db` / `cc5eaccb-b5eb-42c6-973b-a16b2cf5fdce` (APAC)
+- Config: `APP_ENV=preview`, `GAME_ENABLED=true`
+- Remote schema: migrations `0001–0007` are recorded as applied; no pending migrations per the current test report.
+- Cleanup Worker: `sarbath-club-preview-cleanup`, hourly cron `0 * * * *`; current recorded version `4a5ca3f5-0276-42d1-80f8-3d01b891beea`.
+- Turnstile public site key: `0x4AAAAAAE7jL3Poyh4vtvKG`. Widget hostname is `sarbath-club-preview.pages.dev`.
+- Private `TURNSTILE_SECRET` and `STAFF_PASSWORD` are configured in Pages. Never read, print, put in commands, or commit their values.
+
+`scripts/deploy-preview.js` temporarily stages `wrangler.preview.toml` as root config because Pages deployment uses root `wrangler.toml`, then restores the local config. It deploys to the named preview project. Do not change its project name unless a new Pages project has actually been created.
+
+## Reported verification
+
+The current `docs/test-report.md` records:
+
+- `npm run build`: pass; 244.75 kB JS and 23.31 kB CSS before gzip.
+- `npm run check`: pass.
+- `npm test`: 13/13 Node tests pass.
+- `npm run test:e2e`: 6/6 browser tests pass.
+- `npm audit --omit=dev`: no production dependency vulnerabilities.
+- Preview smoke tests: `/`, `/staff`, `/privacy`, `/api/config`, and the WebP logo returned 200; customer play was enabled.
+
+Treat these as prior recorded evidence unless rerun after new changes.
+
+## Remaining launch work
+
+- Physical phone/shop-network timing measurements, including near 120/450 ms boundaries.
+- Real Turnstile completion and actual staff-login/redemption walkthrough.
+- Printed QR scan and sunlight/readability review.
+- Production Pages/D1/cleanup environment, recovery rehearsal, and owner authorization for a real-prize launch.
+
+Some older narrative passages in `docs/decisions.md` and `docs/operations.md` retain historical statements that conflict with the current enabled-preview and redemption-unlocks-phone rules. Use this handoff, `README.md`, `TASKS.md`, the current code, and the latest `docs/test-report.md` as the current source while cleaning up documentation in a future change.
+
+## Commands
 
 ```powershell
-npm run check          # TypeScript syntax and module check
-npm test               # 13 Node unit and integration tests (all pass)
-npm run build          # Vite production build (245.8 kB JS, 27.9 kB CSS)
-npm run db:local       # Local D1 migration runner
-npm run test:e2e       # Playwright browser test suite (6 tests)
-npm run deploy:preview # Deploy production build to sarbath-club-preview
+npm run check
+npm test
+npm run build
+npm run db:local
+npm run preview
+npm run test:e2e
+npm run deploy:preview
 ```
 
-## Next steps / pending actions
-
-1. **Git sync**: Push local commits `a30dc61..2f0796b` to `origin/main` on GitHub (`git push`).
-2. **Preview redeploy**: Deploy the newest ticket redesign & staff dashboard changes to preview via `npm run deploy:preview` if not already deployed.
-3. **Physical testing & launch acceptance**: Real device touch timing, staff counter rehearsal, and printed QR verification before final production launch.
+Run `npm run build` before preview/deploy. Keep local test servers stopped while deploying so the temporary configuration staging cannot make them reload.
