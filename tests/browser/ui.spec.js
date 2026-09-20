@@ -4,7 +4,10 @@ test('customer preview, mobile layout, privacy and staff login', async ({page})=
   await page.goto('/');
   await expect(page.getByRole('heading',{name:/Win a game\. Win a drink\./})).toBeVisible();
   await page.getByRole('button',{name:/^Play/}).click();
-  await expect(page.locator('h1')).toHaveText('Tap fast. Sip free.');
+  await expect(page.locator('h1')).toContainText('Tap fast.');
+  await expect(page.locator('h1')).toContainText('Sip free.');
+  await expect(page.getByText('120–449 ms to win',{exact:true})).toBeVisible();
+  await expect(page.getByText('Unlimited plays',{exact:true})).toBeVisible();
   // New flow: no name/phone fields on welcome screen
   await expect(page.getByRole('button',{name:/let.s play/i})).toBeVisible();
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);

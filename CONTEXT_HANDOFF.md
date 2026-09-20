@@ -24,6 +24,8 @@ Updated 20 September 2026 after reviewing the owner’s external changes. This i
 
 ## External changes now present
 
+Latest game-page redesign: the Tap Fast. Sip Free. detail page now follows the owner-supplied dark mobile mockup. It uses a dedicated dark canvas, two-line title, explanatory copy, compact 120–449 ms/unlimited-play row, illustrated free-sarbath reward card, full-width blue Start button, and dark saved-coupon/recovery/result states. The former behavior and game rules are unchanged. The reference image contained the retired “Quick Sip Challenge” label; implementation correctly uses “REACTION GAME” and the current game name instead.
+
 The owner’s recent commits are already pushed and merged:
 
 - `a30dc61`: release-flow changes. Adds migration `0007_release_redeemed_coupons.sql`, which removes locks for redeemed coupons. `redeem()` updates coupon state and lock deletion together. Adds a transparent 512 px WebP logo and expands verification.
