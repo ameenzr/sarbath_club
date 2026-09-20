@@ -108,3 +108,20 @@ test('minimal interface fits small phones, keeps start visible and verification 
   expect((await submit.boundingBox()).height).toBeGreaterThanOrEqual(48);
   expect(await page.evaluate(()=>document.documentElement.scrollWidth<=innerWidth)).toBe(true);
 });
+
+test('staff keeps a redeemed coupon visible until the next refresh', async ({page}) => {
+  const coupon = { id: 88, code: 'JB-READY', name: 'Test customer', phone: '+919876543210', reaction_ms: 243, prize_label: 'One free sarbath', created_at: Date.now() - 1000, expires_at: Date.now() + 86400000, redeemed: 0, redeemed_at: null };
+  let couponLoads = 0;
+  await page.route('**/api/staff/login', route => route.fulfill({ json: { ok: true } }));
+  await page.route('**/api/staff/redeem', route => route.fulfill({ json: { ok: true, alreadyRedeemed: false, redeemedAt: Date.now() } }));
+  await page.route('**/api/staff/coupons', route => route.fulfill({ json: { results: ++couponLoads === 1 ? [coupon] : [] } }));
+  await page.goto('/staff');
+  await page.getByRole('button', { name: 'Use local admin' }).click();
+  await expect(page.getByText('JB-READY', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Redeem' }).click();
+  await expect(page.locator('.coupon-status')).toHaveText('Redeemed');
+  await expect(page.getByRole('button', { name: 'Redeem' })).toHaveCount(0);
+  await expect(page.getByText('JB-READY', { exact: true })).toBeVisible();
+  await page.getByRole('tab', { name: 'Recent wins' }).click();
+  await expect(page.getByText('JB-READY', { exact: true })).toHaveCount(0);
+});

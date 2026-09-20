@@ -222,8 +222,7 @@ function Staff() {
   async function run(fn) { if (lock.current) return; lock.current = true; setBusy(true); setMessage(''); try { await fn(); } catch(e) { setMessage(e.message); if (e.key === 'unauthorized') setSigned(false); } finally { lock.current = false; setBusy(false); } }
   async function loadCoupons(nextView) { const r = await api('staff/coupons', { view: nextView }); setRows(r.results); setView(nextView); if (!r.results.length) setMessage(nextView === 'redeemed' ? 'No redeemed coupons yet.' : 'No recent wins waiting for redemption.'); }
   async function search() { const r = await api('staff/search', { query }); setRows(r.results); setView('search'); if (!r.results.length) setMessage('No matching coupon found.'); }
-  async function refreshRows() { if (view === 'search') await search(); else await loadCoupons(view); }
-  async function redeem(row) { const r = await api('staff/redeem', { id: row.id }); await refreshRows(); setMessage(r.alreadyRedeemed ? 'Already redeemed. Do not hand over another prize.' : 'Redemption confirmed. Hand over the prize now.'); }
+  async function redeem(row) { const r = await api('staff/redeem', { id: row.id }); setRows(current => current.map(item => item.id === row.id ? { ...item, redeemed: 1, redeemed_at: r.redeemedAt || Date.now() } : item)); setMessage(r.alreadyRedeemed ? 'Already redeemed. Do not hand over another prize.' : 'Redemption confirmed. Hand over the prize now.'); }
   async function signIn(payload) { await api('staff/login', payload); setPassword(''); setSigned(true); await loadCoupons('recent'); }
   const localDevelopment = ['localhost', '127.0.0.1', '[::1]'].includes(location.hostname);
   const listTitle = view === 'redeemed' ? 'Redeemed coupons' : view === 'search' ? 'Search results' : 'Recent wins';
