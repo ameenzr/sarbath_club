@@ -137,3 +137,26 @@ export async function cleanup(db, now = Date.now()) {
     db.prepare('DELETE FROM sessions WHERE used=1 AND created_at<?').bind(now - 86400000)
   ]);
 }
+export async function getLeaderboard(db, limit = 50) {
+  const boundedLimit = Math.min(Math.max(1, limit), 100);
+  const rows = await db.prepare(`
+    SELECT name, reaction_ms, created_at
+    FROM (
+      SELECT c.name, p.reaction_ms, c.created_at,
+             ROW_NUMBER() OVER (PARTITION BY c.phone ORDER BY p.reaction_ms ASC, c.created_at ASC) as rn
+      FROM coupons c
+      JOIN plays p ON p.id=c.play_id
+      WHERE p.status='won' AND p.reaction_ms IS NOT NULL
+    )
+    WHERE rn=1
+    ORDER BY reaction_ms ASC, created_at ASC
+    LIMIT ?
+  `).bind(boundedLimit).all();
+  return (rows.results || []).map((row, index) => ({
+    rank: index + 1,
+    name: row.name,
+    reactionMs: row.reaction_ms,
+    date: row.created_at
+  }));
+}
+

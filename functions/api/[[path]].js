@@ -1,4 +1,4 @@
-import { ApiError, digest, phoneNumber, customerName, primary, loadSession, reserve, finalize, claim, result, redeem, incrementLimit, cleanup } from '../../server/core.js';
+import { ApiError, digest, phoneNumber, customerName, primary, loadSession, reserve, finalize, claim, result, redeem, incrementLimit, cleanup, getLeaderboard } from '../../server/core.js';
 
 const TEST_SECRET = '1x0000000000000000000000000000000AA';
 const LOCAL_STAFF_VERSION = 'local-development-admin';
@@ -37,7 +37,7 @@ export async function onRequest({ request, env }) {
   const received = Date.now();
   try {
     const path = new URL(request.url).pathname.replace('/api/', '');
-    const expected = path === 'result' || path === 'config' ? 'GET' : 'POST';
+    const expected = path === 'result' || path === 'config' || path === 'leaderboard' ? 'GET' : 'POST';
     if (request.method !== expected) return json({ error: 'method_not_allowed' }, 405, { Allow: expected });
     if (request.method === 'POST') {
       const origin = request.headers.get('Origin');
@@ -54,6 +54,11 @@ export async function onRequest({ request, env }) {
     const input = request.method === 'POST' ? await body(request) : {};
     const ip = request.headers.get('CF-Connecting-IP') || 'local';
     const ipKey = await digest(ip);
+    if (path === 'leaderboard') {
+      await incrementLimit(db, `leaderboard:${ipKey}`, 60);
+      const leaderboard = await getLeaderboard(db);
+      return json({ leaderboard });
+    }
     if (path === 'config') {
       const cfg = await db.prepare('SELECT prize_label,prize_terms,retention_days,approved FROM config WHERE id=1').first();
       return json({ prize: { label: cfg.prize_label, terms: cfg.prize_terms }, retentionDays: cfg.retention_days, enabled: local(request) || (env.GAME_ENABLED === 'true' && cfg.approved === 1) });

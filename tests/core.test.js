@@ -2,7 +2,7 @@ import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { Miniflare } from 'miniflare';
-import { phoneNumber, customerName, playDate, outcome, couponCode, digest, csvCell, reserve, finalize, claim, redeem, loadSession, incrementLimit, cleanup } from '../server/core.js';
+import { phoneNumber, customerName, playDate, outcome, couponCode, digest, csvCell, reserve, finalize, claim, redeem, loadSession, incrementLimit, cleanup, getLeaderboard } from '../server/core.js';
 import { onRequest } from '../functions/api/[[path]].js';
 
 test('normalization, date boundary, prize boundaries and export escaping', async () => {
@@ -318,6 +318,18 @@ test('API anonymous flash, claim, result recovery, staff authentication and orig
     assert.equal(claimRetry.data.code, claimed.data.code);
     // Result shows code
     assert.equal((await request('result', undefined, options)).data.code, claimed.data.code);
+    // Public leaderboard shows winner score without exposing private phone or code
+    const lbResponse = await request('leaderboard');
+    assert.equal(lbResponse.response.status, 200);
+    assert.equal(lbResponse.data.leaderboard.length, 1);
+    assert.deepEqual(lbResponse.data.leaderboard[0], {
+      rank: 1,
+      name: 'Test',
+      reactionMs: tapped.data.reactionMs,
+      date: lbResponse.data.leaderboard[0].date
+    });
+    assert.equal(lbResponse.data.leaderboard[0].phone, undefined);
+    assert.equal(lbResponse.data.leaderboard[0].code, undefined);
     // Staff search/redeem
     const login = await request('staff/login', {password:env.STAFF_PASSWORD}); assert.equal(login.response.status, 200);
     staffCookie = login.response.headers.get('Set-Cookie').split(';')[0];

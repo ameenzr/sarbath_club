@@ -1,4 +1,22 @@
 import { test, expect } from '@playwright/test';
+test('branded launch is visible before the hub and respects reduced motion', async ({page}) => {
+  await page.emulateMedia({reducedMotion:'no-preference'});
+  await page.goto('/');
+  const launch = page.getByRole('status', {name:'Opening Sarbath Club'});
+  await expect(launch).toBeVisible();
+  await expect(launch.locator('img')).toBeVisible();
+  await expect(launch.locator('.wave-wrap-gold')).toBeVisible();
+  await expect(launch.locator('.wave-wrap-sarbath')).toBeVisible();
+  await expect.poll(() => launch.locator('img').evaluate(el => el.complete && Number(getComputedStyle(el).opacity) > 0.9)).toBe(true);
+  await page.screenshot({path:'test-results/launch-restored.png'});
+  await expect(launch).toHaveCount(0);
+  await expect(page.getByRole('button', {name:/^Play/})).toBeVisible();
+  await page.screenshot({path:'test-results/hub-restored.png'});
+  await page.emulateMedia({reducedMotion:'reduce'});
+  await page.reload();
+  await expect(launch).toHaveCount(0);
+  await expect(page.getByRole('button', {name:/^Play/})).toBeVisible();
+});
 test('customer preview, mobile layout, privacy and staff login', async ({page})=>{
   await page.emulateMedia({reducedMotion:'reduce'});
   await page.goto('/');
@@ -134,3 +152,33 @@ test('staff keeps a redeemed coupon visible until the next refresh', async ({pag
   await page.getByRole('tab', { name: 'Recent wins' }).click();
   await expect(page.getByText('JB-READY', { exact: true })).toHaveCount(0);
 });
+
+test('public leaderboard is visible to anyone from hub, direct route, and respects mobile layout', async ({ page }) => {
+  await page.emulateMedia({ reducedMotion: 'reduce' });
+  const sampleLeaderboard = [
+    { rank: 1, name: 'Lightning Ameen', reactionMs: 142, date: Date.now() - 3600000 },
+    { rank: 2, name: 'Speedy Rahul', reactionMs: 198, date: Date.now() - 86400000 }
+  ];
+  await page.route('**/api/leaderboard', route => route.fulfill({ json: { leaderboard: sampleLeaderboard } }));
+  await page.goto('/');
+  await expect(page.getByRole('button', { name: /Leaderboard/i })).toBeVisible();
+  await expect(page.getByRole('button', { name: /Wall of Fame/i })).toBeVisible();
+  await page.getByRole('button', { name: /Wall of Fame/i }).click();
+
+  await expect(page.getByRole('heading', { name: /Fastest Tappers/i })).toBeVisible();
+  await expect(page.getByText('Lightning Ameen')).toBeVisible();
+  await expect(page.getByText('142')).toBeVisible();
+  await expect(page.getByText('Speedy Rahul')).toBeVisible();
+  await expect(page.getByText('198')).toBeVisible();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+
+  // Back to games button
+  await page.getByRole('button', { name: /All games/i }).click();
+  await expect(page.getByRole('heading', { name: /Win a game\. Win a drink\./i })).toBeVisible();
+
+  // Direct navigation to /leaderboard
+  await page.goto('/leaderboard');
+  await expect(page.getByRole('heading', { name: /Fastest Tappers/i })).toBeVisible();
+  await expect(page.getByText('Lightning Ameen')).toBeVisible();
+});
+
