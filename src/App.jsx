@@ -1,5 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { api, sampleConnection } from './api.js';
+import { AnagramGame } from './AnagramGame.jsx';
 
 // Developed by AMEEN. Email: ameennazerpk7@gmail.com
 
@@ -168,7 +169,8 @@ function CustomerExperience({ initialPage = 'games' }) {
   };
   if (launching) return <LaunchScreen onDone={finishLaunch} />;
   if (page === 'leaderboard') return <Leaderboard onBack={() => goTo('games')} onPlay={() => goTo('quick-sip')} />;
-  if (page === 'games') return <GamesHub onPlay={() => goTo('quick-sip')} onLeaderboard={() => goTo('leaderboard')} />;
+  if (page === 'games') return <GamesHub onPlay={() => goTo('quick-sip')} onLeaderboard={() => goTo('leaderboard')} onAnagramPlay={() => goTo('anagram')} />;
+  if (page === 'anagram') return <AnagramGame onBack={() => goTo('games')} onLeaderboard={() => goTo('leaderboard')} />;
   return <Game onGames={() => goTo('games')} onLeaderboard={() => goTo('leaderboard')} />;
 }
 function LeaderboardSneakPeek({ onLeaderboard }) {
@@ -220,7 +222,7 @@ function LeaderboardSneakPeek({ onLeaderboard }) {
     </section>
   );
 }
-function GamesHub({ onPlay, onLeaderboard }) {
+function GamesHub({ onPlay, onLeaderboard, onAnagramPlay }) {
   const [rulesOpen, setRulesOpen] = useState(false);
   useEffect(() => {
     if (!rulesOpen) return;
@@ -256,6 +258,25 @@ function GamesHub({ onPlay, onLeaderboard }) {
           </svg>
         </div>
       </article>
+
+      <article className="game-choice" style={{ marginTop: '16px' }}>
+        <div className="game-choice-copy">
+          <span className="game-choice-kicker">WORD PUZZLE</span>
+          <div className="game-choice-title">
+            <h2>30 Second<br />Challenge</h2>
+            <p>Unscramble 8 drinks before the clock runs out.</p>
+          </div>
+          <div className="game-choice-meta">
+            <span><b aria-hidden="true">⏱</b>30 seconds</span>
+            <span><b aria-hidden="true">★</b>BOGO Reward</span>
+          </div>
+          <button className="game-choice-button" onClick={onAnagramPlay}>Play now <span aria-hidden="true">→</span></button>
+        </div>
+        <div className="game-choice-visual" aria-hidden="true" style={{ fontSize: '40px', fontWeight: 'bold', color: '#ffc83f' }}>
+          A🔀Z
+        </div>
+      </article>
+
       <LeaderboardSneakPeek onLeaderboard={onLeaderboard} />
     </section></main>{rulesOpen && <div className="rules-backdrop" onPointerDown={event => { if (event.target === event.currentTarget) setRulesOpen(false); }}><section className="rules-dialog" role="dialog" aria-modal="true" aria-labelledby="rules-title"><button className="rules-close" onClick={() => setRulesOpen(false)} aria-label="Close rules" autoFocus>×</button><span className="eyebrow">TAP FAST. SIP FREE.</span><h2 id="rules-title">How to play</h2><ol><li>Tap <strong>Play</strong>, then wait for the screen to turn blue.</li><li>Tap anywhere as quickly as you can. A reaction from <strong>120–449 ms</strong> wins.</li><li>If you win, enter your name and Indian mobile number to claim your coupon.</li><li>Each phone number may hold one unredeemed coupon at a time.</li><li>After staff redeem it, the same number can claim another win. Unredeemed coupons expire after seven days.</li></ol><button className="rules-done" onClick={() => setRulesOpen(false)}>Got it</button></section></div>}</Shell>;
 }
