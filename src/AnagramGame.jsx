@@ -1,17 +1,16 @@
 import { useState, useEffect, useRef } from 'react';
 
+// Exact menu from Sarbath Club
 const DRINKS = [
-  { name: 'LIME', hint: 'Citrus staple' },
-  { name: 'MINT', hint: 'Cool and refreshing' },
-  { name: 'SODA', hint: 'Bubbly base' },
-  { name: 'APPLE', hint: 'Keeps the doctor away' },
-  { name: 'MANGO', hint: 'King of fruits' },
-  { name: 'GRAPE', hint: 'Vine fruit' },
-  { name: 'LEMON', hint: 'Sour and yellow' },
-  { name: 'MILK', hint: 'Creamy addition' },
-  { name: 'GINGER', hint: 'Spicy kick' },
-  { name: 'NANNARI', hint: 'Classic sarbath root' },
-  { name: 'KULUKKI', hint: 'Shaken, not stirred' }
+  { pre: '', word: 'BADAM', post: ' MILK SARBATH', hint: 'Badam, Milk, Nannari Syrup, Basil Seeds' },
+  { pre: '', word: 'GRAPE', post: ' MILK SARBATH', hint: 'Grape, Milk, Nannari Syrup, Basil Seeds' },
+  { pre: '', word: 'GRAPE', post: ' SODA SARBATH', hint: 'Grape, Soda, Nannari Syrup, Basil Seeds' },
+  { pre: '', word: 'BOOST', post: ' MILK SARBATH', hint: 'Boost, Milk, Nannari Syrup, Basil Seeds' },
+  { pre: '', word: 'MILK', post: ' SARBATH SP', hint: 'Full Cream Milk, Nannari Syrup, Basil Seeds' },
+  { pre: '', word: 'MILK', post: ' SARBATH', hint: 'Milk, Nannari Syrup' },
+  { pre: '', word: 'SODA', post: ' SARBATH', hint: 'Soda, Lemon, Nannari Syrup' },
+  { pre: '', word: 'SARBATH', post: '', hint: 'Water, Lemon, Nannari Syrup' },
+  { pre: '', word: 'LEMON', post: ' SODA', hint: 'Soda, Lemon, Salt' }
 ];
 
 function shuffleArray(array) {
@@ -67,17 +66,18 @@ export function AnagramGame({ onBack, onLeaderboard }) {
 
   const loadNextDrink = (prevDrink) => {
     let nextDrink = DRINKS[Math.floor(Math.random() * DRINKS.length)];
-    // avoid same drink twice in a row
-    while (prevDrink && nextDrink.name === prevDrink.name) {
+    // avoid exact same drink twice in a row
+    while (prevDrink && nextDrink.word === prevDrink.word && nextDrink.post === prevDrink.post) {
       nextDrink = DRINKS[Math.floor(Math.random() * DRINKS.length)];
     }
     setCurrentDrink(nextDrink);
     
-    // Scramble logic
-    let letters = nextDrink.name.split('');
+    // Scramble logic for the key word only
+    let letters = nextDrink.word.split('');
     let shuffled = shuffleArray(letters);
+    
     // ensure it's not the same as original
-    while (shuffled.join('') === nextDrink.name && nextDrink.name.length > 1) {
+    while (shuffled.join('') === nextDrink.word && nextDrink.word.length > 1) {
       shuffled = shuffleArray(letters);
     }
     
@@ -94,13 +94,13 @@ export function AnagramGame({ onBack, onLeaderboard }) {
     
     const formedWord = newSelected.map(i => scrambled[i].char).join('');
     
-    if (formedWord === currentDrink.name) {
+    if (formedWord === currentDrink.word) {
       // Correct!
       setScore(prev => prev + 1);
       setTimeout(() => {
         loadNextDrink(currentDrink);
       }, 300); // short delay for visual feedback
-    } else if (formedWord.length === currentDrink.name.length) {
+    } else if (formedWord.length === currentDrink.word.length) {
       // Wrong word
       setIsError(true);
       setTimeout(() => {
@@ -125,7 +125,7 @@ export function AnagramGame({ onBack, onLeaderboard }) {
             <span className="eyebrow">WORD PUZZLE</span>
             <h1>30 Second <span>Challenge</span></h1>
             <div className="game-lede">
-              <p>Unscramble as many drinks as you can in 30 seconds.</p>
+              <p>Unscramble the Sarbath Club menu before time runs out.</p>
             </div>
           </section>
           <section className="game-card">
@@ -148,46 +148,50 @@ export function AnagramGame({ onBack, onLeaderboard }) {
           <button className="back-to-games" onClick={handleExit}>
             <span aria-hidden="true">&lt;</span>Exit Game
           </button>
-          <section className="anagram-board" style={{ textAlign: 'center', padding: '20px' }}>
+          <section className="anagram-board" style={{ textAlign: 'center', padding: '10px 0' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '20px', fontSize: '18px', fontWeight: 'bold' }}>
               <div style={{ color: timeLeft <= 5 ? '#ff4d4d' : 'inherit' }}>⏱ {timeLeft}s</div>
               <div>Score: {score}</div>
             </div>
             
-            <div style={{ color: '#a7bbd4', marginBottom: '10px', fontSize: '14px', textTransform: 'uppercase', letterSpacing: '2px' }}>
-              {currentDrink.hint}
+            <div style={{ color: '#a7bbd4', marginBottom: '16px', fontSize: '12px', textTransform: 'uppercase', letterSpacing: '1px', padding: '0 20px', lineHeight: '1.4' }}>
+              Ingredients: {currentDrink.hint}
             </div>
 
+            {/* Answer Display Area */}
             <div 
               style={{ 
-                display: 'flex', 
-                gap: '8px', 
-                justifyContent: 'center', 
-                minHeight: '60px', 
-                marginBottom: '30px',
+                fontSize: '20px', 
+                fontWeight: 'bold', 
+                marginBottom: '30px', 
+                color: '#fff',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                flexWrap: 'wrap',
+                gap: '6px',
                 animation: isError ? 'shake 0.4s' : 'none'
               }}
             >
-              {/* Tapped Letters Go Here */}
-              {selectedIndices.map((scrambledIndex, i) => (
-                <div 
-                  key={`sel-${i}`} 
-                  style={{ 
-                    width: '45px', 
-                    height: '45px', 
+              {currentDrink.pre && <span>{currentDrink.pre}</span>}
+              
+              <span style={{ display: 'inline-flex', gap: '4px', margin: '0 4px' }}>
+                {Array.from({ length: currentDrink.word.length }).map((_, i) => (
+                  <div key={i} style={{ 
+                    width: '32px', 
+                    height: '38px', 
+                    borderBottom: '2px solid #71b4ff', 
                     display: 'grid', 
                     placeItems: 'center', 
-                    background: '#087dff', 
-                    color: 'white', 
-                    fontSize: '24px', 
-                    fontWeight: 'bold', 
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 10px rgba(8,125,255,0.3)'
-                  }}
-                >
-                  {scrambled[scrambledIndex].char}
-                </div>
-              ))}
+                    color: '#ffc83f',
+                    fontSize: '24px'
+                  }}>
+                    {selectedIndices[i] !== undefined ? scrambled[selectedIndices[i]].char : ''}
+                  </div>
+                ))}
+              </span>
+              
+              {currentDrink.post && <span>{currentDrink.post}</span>}
             </div>
 
             <div style={{ display: 'flex', gap: '8px', justifyContent: 'center', flexWrap: 'wrap', marginBottom: '20px' }}>
@@ -215,7 +219,7 @@ export function AnagramGame({ onBack, onLeaderboard }) {
               ))}
             </div>
 
-            <button onClick={handleClear} style={{ background: 'transparent', border: 'none', color: '#a7bbd4', padding: '10px', marginTop: '10px' }}>
+            <button onClick={handleClear} style={{ background: 'transparent', border: 'none', color: '#a7bbd4', padding: '10px', marginTop: '10px', cursor: 'pointer', fontSize: '14px' }}>
               Clear / Undo
             </button>
           </section>
